@@ -79,53 +79,11 @@ var genJavaBean = function (fields, defs, cb) {
   String.prototype.lowerFirst = function() {
     return this.charAt(0).toLowerCase() + this.slice(1);
   };
-  var template = fs.readFileSync('./tableToEntity.tmpl', 'utf8');
-  var compiled = _.template(template);
-  console.log(fields);
-  _.forEach(fields, function(field){
 
-    _.forEach(typeToJava, function(type){
-      if(type.reg.test(field.Type)){
-        field.JavaType = type.type;
-        return false;
-      }
-    });
-
-    field.JavaField = _.camelCase(field.Field.replace(/^[a-z]_/, ''));
-  });
-  var result = compiled({
-    tableName: tableName,
-    className: _.camelCase(tableName.replace(/^t_/, '')).capitalizeFirstLetter(),
-    columns: fields
-  });
-  // console.log(result);
-    var className = _.camelCase(tableName.replace(/^t_/, '')).capitalizeFirstLetter();
-    fs.writeFileSync('../../java/com/janmee.stock/entity/'+className+'.java', result);
-
-    //生成DAO
-    template = fs.readFileSync('./tableToDao.tmpl','utf8');
-    compiled = _.template(template);
-  _.forEach(fields, function(field){
-    _.forEach(typeToJava, function(type){
-      if(type.reg.test(field.Type)){
-        field.JavaType = type.type;
-        return false;
-      }
-    });
-
-    field.JavaField = _.camelCase(field.Field.replace(/^[a-z]_/, ''));
-  });
- result = compiled({
-    tableName: tableName,
-    className: _.camelCase(tableName.replace(/^t_/, '')).capitalizeFirstLetter(),
-    columns: fields
-  });
-  //console.log(result);
-  fs.writeFileSync('../../java/com/janmee.stock/dao/'+className+'Dao.java', result);
 
   //service
-  template = fs.readFileSync('./tableToService.tmpl','utf8');
-    compiled = _.template(template);
+    var template = fs.readFileSync('./tableToService.tmpl','utf8');
+    var compiled = _.template(template);
   _.forEach(fields, function(field){
     _.forEach(typeToJava, function(type){
       if(type.reg.test(field.Type)){

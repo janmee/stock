@@ -11,13 +11,13 @@
         <javaModelGenerator targetPackage="com.janmee.stock.entity"
                             targetProject="E:\github\stock\stock-server\src\main\java" />
         <!-- 生成映射文件的包名和位置-->
-        <sqlMapGenerator targetPackage="mapping" targetProject="E:\github\stock\stock-server\src\main\src">
+        <sqlMapGenerator targetPackage="mapping" targetProject="E:\github\stock\stock-server\src\main\resources">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
         <!-- 生成DAO的包名和位置-->
         <javaClientGenerator type="XMLMAPPER" targetPackage="com.janmee.stock.dao" targetProject="E:\github\stock\stock-server\src\main\java">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
-        <table schema="stock" tableName="test" />
+        <table schema="stock" tableName="stock" />
     </context>
 </generatorConfiguration>
