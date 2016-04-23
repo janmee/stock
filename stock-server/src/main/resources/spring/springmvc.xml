@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-4.1.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-4.1.xsd"
+    default-autowire="byName"   >
+
+	<mvc:annotation-driven>
+		<mvc:argument-resolvers>
+			<bean class="org.springframework.data.web.PageableHandlerMethodArgumentResolver" />
+		</mvc:argument-resolvers>
+	</mvc:annotation-driven>
+
+	<!-- 自动搜索@Controller标注的类 -->
+	<context:component-scan base-package="com.janmee.stock.controller" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+
+    <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+
+    <!-- 根据客户端的不同的请求决定不同的view进行响应, 如 /blog/1.json /blog/1.xml -->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+    	<property name="ignoreAcceptHeader" value="true"/>
+		<property name="defaultContentType" value="application/json"/>
+		<property name="mediaTypes">  
+            <map>  
+                <entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+				<entry key="html" value="text/html" />
+            </map>
+        </property>
+		<!-- 用于开启 /userinfo/123?format=json 的支持 -->
+		<property name="favorParameter" value="false"/>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+			    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+			        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+			        <property name="prefix" value="/WEB-INF/jsp/"/>
+			        <property name="suffix" value=".jsp"/>
+			    </bean>
+			</list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<!-- for application/json -->
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" />
+			</list>
+		</property>
+    </bean>
+    
+    <!-- SpringMVC上传文件时，需要配置MultipartResolver处理器 -->  
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <property name="defaultEncoding" value="UTF-8"/>  
+        <!-- 指定所上传文件的总大小不能超过10MB。注意maxUploadSize属性的限制不是针对单个文件，而是所有文件的容量之和 -->
+        <property name="maxUploadSize" value="10485760"/>
+    </bean>
+
+	<!-- 全局异常Resolver -->
+	<bean id="exceptionResolver" class="com.janmee.stock.web.resolver.JsonMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop key="java.lang.IllegalArgumentException">IllegalArgumentException</prop>
+				<prop key="org.springframework.dao.DuplicateKeyException">DuplicateKeyException</prop>
+				<prop key="com.seewo.core.exception.UserUnauthorizedException">UserUnauthorizedException</prop>
+				<prop key="com.seewo.core.exception.ResourceNotFoundException">ResourceNotFoundException</prop>
+				<prop key="java.lang.Exception">Exception</prop>
+			</props>
+		</property>
+		<property name="statusCodes">
+			<props>
+				<prop key="IllegalArgumentException">40000</prop>
+				<prop key="DuplicateKeyException">40002</prop>
+				<prop key="UserUnauthorizedException">40106</prop>
+				<prop key="ResourceNotFoundException">40400</prop>
+				<prop key="Exception">50000</prop>
+			</props>
+		</property>
+	</bean>
+
+    <!-- 输入输出log打印 -->
+    <bean id="LogHandlerInterceptorAdapter" class="com.janmee.stock.web.handler.LogHandlerInterceptorAdapter"></bean>
+    <aop:config proxy-target-class="true">
+        <aop:pointcut id="controllerMethod" expression="(execution(* com.janmee.stock.controller.*.*(..)))"/>
+        <aop:aspect ref="LogHandlerInterceptorAdapter">
+            <aop:before method="before" pointcut-ref="controllerMethod"/>
+        </aop:aspect>
+        <aop:aspect ref="LogHandlerInterceptorAdapter">
+            <aop:after-returning method="after" pointcut-ref="controllerMethod" returning="returnValue"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!-- 检测controller接口的执行效率 -->
+    <bean id="controllerMethodWatcher" class="com.seewo.core.watcher.ServiceMethodWatcher"></bean>
+    <aop:config>
+        <aop:pointcut id="controllerMethod" expression="(execution(* com.janmee.stock.controller.*.*(..)))" />
+        <aop:aspect ref="controllerMethodWatcher">
+            <aop:around method="aroundAdvice" pointcut-ref="controllerMethod" />
+        </aop:aspect>
+    </aop:config>
+
+	<!-- 自定义token拦截器，处理token验证的逻辑 -->
+	<!--<mvc:interceptors>-->
+		<!--<bean class="com.janmee.stock.web.handler.TokenHandlerInterceptorAdapter">-->
+			<!--<property name="ignoreUrls">-->
+				<!--<list>-->
+                    <!--<value>/api/v1/*/front</value>-->
+                    <!--<value>/api/v1/*/play/video</value>-->
+                    <!--<value>/api/v1/system/authentications</value>-->
+					<!--<value>/api/v1/course/groups/clearRedis</value>-->
+					<!--<value>/api/v1/softwareInfos/*/download/log</value>-->
+					<!--<value>/api/v1/softwareInfos/hot/download/list</value>-->
+				<!--</list>-->
+			<!--</property>-->
+		<!--</bean>-->
+	<!--</mvc:interceptors>-->
+</beans>

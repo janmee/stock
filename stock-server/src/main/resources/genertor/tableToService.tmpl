@@ -1,0 +1,25 @@
+package com.janmee.stock.service;
+
+import com.janmee.stock.entity.<%=className%>;
+import com.janmee.stock.vo.query.<%=className%>Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+public interface <%=className%>Service {
+
+	Page<<%=className%>> findAll(Pageable pageable);
+
+	Page<<%=className%>> findAll(<%=className%>Query query, Pageable pageable);
+
+	<%=className%> findOneByUid(String uid);
+
+	<%=className%> create(<%=className%> <%=className.lowerFirst()%>);
+
+	<%=className%> update(<%=className%> <%=className.lowerFirst()%>);
+
+	void logicDeleteByUid(String uid);
+
+    List<<%=className%>> findAllByUids(List<String> uids);
+}

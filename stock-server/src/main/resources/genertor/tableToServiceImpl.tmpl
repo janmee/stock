@@ -1,0 +1,89 @@
+package com.janmee.stock.service.impl;
+
+import com.seewo.core.util.bean.ObjectUtils;
+import com.janmee.stock.dao.<%=className%>Dao;
+import com.janmee.stock.entity.<%=className%>;
+import com.janmee.stock.service.<%=className%>Service;
+import com.janmee.stock.vo.query.<%=className%>Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.domain.Specification;
+import javax.transaction.Transactional;
+import javax.persistence.criteria.*;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@Transactional
+public class <%=className%>ServiceImpl implements <%=className%>Service {
+
+	private static final Logger logger = LoggerFactory.getLogger(<%=className%>ServiceImpl.class);
+
+	@Autowired
+	private <%=className%>Dao <%=className.lowerFirst()%>Dao;
+
+	@Override
+	public Page<<%=className%>> findAll(Pageable pageable) {
+		return <%=className.lowerFirst()%>Dao.findAll(pageable);
+	}
+
+	@Override
+	public Page<<%=className%>> findAll(<%=className%>Query query, Pageable pageable) {
+		Specification<<%=className%>> spec = this.buildSpecification(query);
+		return <%=className.lowerFirst()%>Dao.findAll(spec, pageable);
+	}
+
+	@Override
+	public <%=className%> findOneByUid(String uid) {
+		return <%=className.lowerFirst()%>Dao.findOneByUid(uid);
+	}
+
+	@Override
+	public <%=className%> create(<%=className%> <%=className.lowerFirst()%>) {
+		return <%=className.lowerFirst()%>Dao.save(<%=className.lowerFirst()%>);
+	}
+
+	@Override
+	public <%=className%> update(<%=className%> <%=className.lowerFirst()%>){
+		return <%=className.lowerFirst()%>Dao.save(<%=className.lowerFirst()%>);
+	}
+
+	@Override
+	public void logicDeleteByUid(String uid){
+		<%=className.lowerFirst()%>Dao.logicDeleteByUid(uid);
+	}
+
+	@Override
+    public List<<%=className%>> findAllByUids(List<String> uids) {
+        return <%=className.lowerFirst()%>Dao.findAllByUids(uids);
+    }
+
+	/**
+     * 创建动态查询条件组合.
+     */
+    private Specification<<%=className%>> buildSpecification(final <%=className%>Query query) {
+        return new Specification<<%=className%>>() {
+            @Override
+            public Predicate toPredicate(Root<<%=className%>> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<Predicate>();
+                <%
+    				_.forEach(columns, function(column){
+        			if(column.Field=='id' || column.Field=='is_deleted'|| column.Field=='created_at'|| column.Field=='updated_at') return;
+    			%>if (ObjectUtils.isNotBlank(query.get<%=column.JavaField.capitalizeFirstLetter()%>())) {
+                    Path<String> <%=column.JavaField%> = root.get("<%=column.JavaField%>");
+                    predicates.add(criteriaBuilder.equal(<%=column.JavaField%>, query.get<%=column.JavaField.capitalizeFirstLetter()%>()));
+                }
+			    <%
+			    });
+			    %>if (!predicates.isEmpty()) {
+                    return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+                }
+                return criteriaBuilder.conjunction();
+            }
+        };
+    }
+}

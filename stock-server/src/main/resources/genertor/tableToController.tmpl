@@ -1,0 +1,87 @@
+package com.janmee.stock.controller;
+
+import com.seewo.core.base.Constants;
+import com.seewo.core.base.DataMap;
+import com.seewo.core.util.bean.BeanUtils;
+import com.janmee.stock.base.StatusCode;
+import com.janmee.stock.entity.<%=className%>;
+import com.janmee.stock.service.<%=className%>Service;
+import com.janmee.stock.vo.query.<%=className%>Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+
+
+@RestController
+@RequestMapping("/api/v1/<%=className.lowerFirst()%>s")
+public class <%=className%>Controller {
+
+    @Autowired
+    private <%=className%>Service <%=className.lowerFirst()%>Service;
+
+    /**
+     * 条件查询
+     */
+    @RequestMapping
+    public DataMap show<%=className%>s(<%=className%>Query query, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<<%=className%>> page = <%=className.lowerFirst()%>Service.findAll(query,pageable);
+        return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
+                .addAttribute(Constants.DATA, page);
+    }
+
+    /**
+     * 单个查询
+     */
+    @RequestMapping(value = "/{uid}")
+    public DataMap show<%=className%>(@PathVariable String uid) {
+        DataMap dataMap = new DataMap();
+        dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
+        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.findOneByUid(uid));
+        return dataMap;
+    }
+
+    /**
+     * 新增
+     */
+    @RequestMapping(method = RequestMethod.POST)
+    public DataMap create(@RequestBody <%=className%> <%=className.lowerFirst()%>) {
+        DataMap dataMap = new DataMap();
+        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.create(<%=className.lowerFirst()%>));
+        dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
+        return dataMap;
+    }
+
+    /**
+     * 更新
+     */
+    @RequestMapping(value = "/{uid}", method = RequestMethod.PUT)
+    public DataMap update(@PathVariable String uid, @RequestBody <%=className%> <%=className.lowerFirst()%>) {
+        DataMap dataMap = new DataMap();
+        <%=className%> persist<%=className%> = <%=className.lowerFirst()%>Service.findOneByUid(uid);
+        BeanUtils.copyProperties(<%=className.lowerFirst()%>, persist<%=className%>, "id", "uid", "createdAt" ,"isDeleted");
+        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.update(persist<%=className%>));
+        dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
+        return dataMap;
+    }
+
+    /**
+     * 删除
+     */
+	@RequestMapping(value = "/{uid}", method = RequestMethod.DELETE)
+    public DataMap delete(@PathVariable String uid) {
+        DataMap dataMap = new DataMap();
+        <%=className.lowerFirst()%>Service.logicDeleteByUid(uid);
+        dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
+        return dataMap;
+    }
+
+}

@@ -1,0 +1,8 @@
+package com.janmee.stock.dao;
+
+import com.seewo.core.repository.BaseJpaRepository;
+import com.janmee.stock.entity.<%=className%>;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+public interface <%=className%>Dao extends BaseJpaRepository<<%=className%>, String>, JpaSpecificationExecutor<<%=className%>> {
+}
