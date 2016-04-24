@@ -9,7 +9,8 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>stock-server</module>
+        <!--<module>stock-server</module>-->
+        <module>spider</module>
     </modules>
 
     <properties>
@@ -37,21 +38,21 @@
         <mybatis.version>3.2.6</mybatis.version>
     </properties>
 
-    <!-- 依赖包仓库定 -->
-    <repositories>
-        <repository>
-            <id>nexus</id>
-            <name>nexus</name>
-            <url>http://mvn.gz.cvte.cn/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
+    <!--&lt;!&ndash; 依赖包仓库定 &ndash;&gt;-->
+    <!--<repositories>-->
+        <!--<repository>-->
+            <!--<id>nexus</id>-->
+            <!--<name>nexus</name>-->
+            <!--<url>http://mvn.gz.cvte.cn/nexus/content/groups/public/</url>-->
+            <!--<releases>-->
+                <!--<enabled>true</enabled>-->
+            <!--</releases>-->
+            <!--<snapshots>-->
+                <!--<enabled>true</enabled>-->
+                <!--<updatePolicy>always</updatePolicy>-->
+            <!--</snapshots>-->
+        <!--</repository>-->
+    <!--</repositories>-->
 
     <dependencyManagement>
         <dependencies>

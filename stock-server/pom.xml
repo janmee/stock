@@ -104,15 +104,7 @@
             <artifactId>kryo</artifactId>
         </dependency>
 
-        <!-- webgagic -->
-        <dependency>
-            <groupId>us.codecraft</groupId>
-            <artifactId>webmagic-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>us.codecraft</groupId>
-            <artifactId>webmagic-extension</artifactId>
-        </dependency>
+
     </dependencies>
 
     <profiles>

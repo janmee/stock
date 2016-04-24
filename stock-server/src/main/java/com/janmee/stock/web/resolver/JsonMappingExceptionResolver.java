@@ -1,10 +1,6 @@
 package com.janmee.stock.web.resolver;
 
 import com.janmee.stock.base.StatusCode;
-import com.seewo.core.base.Constants;
-import com.seewo.core.exception.StackTraceUtils;
-import com.seewo.core.util.HttpServletUtils;
-import com.seewo.core.util.json.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -30,7 +26,7 @@ public class JsonMappingExceptionResolver extends SimpleMappingExceptionResolver
 	protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) {
 
-		logger.error("RequestURI:{}, Exception:{}", request.getRequestURI(), StackTraceUtils.getStackTrace(ex));
+//		logger.error("RequestURI:{}, Exception:{}", request.getRequestURI(), StackTraceUtils.getStackTrace(ex));
 
 		String viewName = determineViewName(ex, request);
 		if (viewName != null) {

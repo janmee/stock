@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration>
+    <classPathEntry
+            location="C:\Users\Administrator\.m2\repository\mysql\mysql-connector-java\5.1.18\mysql-connector-java-5.1.18.jar" />
+    <context id="context1" targetRuntime="MyBatis3">
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/stock?characterEncoding=UTF-8"
+                        userId="root" password="13662542862" />
+        <!-- 生成模型的包名和位置-->
+        <javaModelGenerator targetPackage="com.janmee.spider.entity"
+                            targetProject="G:\workspace\stock\spider\src\main\java" />
+        <!-- 生成映射文件的包名和位置-->
+        <sqlMapGenerator targetPackage="com.janmee.spider.mapper" targetProject="G:\workspace\stock\spider\src\main\java">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+        <!-- 生成DAO的包名和位置-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.janmee.spider.dao" targetProject="G:\workspace\stock\spider\src\main\java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+        <table schema="stock" tableName="stock_daily" />
+    </context>
+</generatorConfiguration>
