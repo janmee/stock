@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <!--<module>stock-server</module>-->
+        <module>stock-server</module>
         <module>spider</module>
     </modules>
 
@@ -27,8 +27,6 @@
         <hibernate-validator.version>5.0.3.Final</hibernate-validator.version>
         <slf4j.version>1.7.6</slf4j.version>
         <fastjson.version>1.2.3</fastjson.version>
-        <!--模调依赖-->
-        <module-monitor-sdk.version>2.0-SNAPSHOT</module-monitor-sdk.version>
         <druid.version>1.0.13</druid.version>
         <!--jedis-->
         <jedis.version>2.6.2</jedis.version>
@@ -38,27 +36,27 @@
         <mybatis.version>3.2.6</mybatis.version>
     </properties>
 
-    <!--&lt;!&ndash; 依赖包仓库定 &ndash;&gt;-->
-    <!--<repositories>-->
-        <!--<repository>-->
-            <!--<id>nexus</id>-->
-            <!--<name>nexus</name>-->
-            <!--<url>http://mvn.gz.cvte.cn/nexus/content/groups/public/</url>-->
-            <!--<releases>-->
-                <!--<enabled>true</enabled>-->
-            <!--</releases>-->
-            <!--<snapshots>-->
-                <!--<enabled>true</enabled>-->
-                <!--<updatePolicy>always</updatePolicy>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
-    <!--</repositories>-->
+    <!-- 依赖包仓库定 -->
+    <repositories>
+        <repository>
+            <id>nexus</id>
+            <name>nexus</name>
+            <url>https://raw.githubusercontent.com/janmee/maven-repo/master</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>
             <!-- seewo modules -->
             <dependency>
-                <groupId>com.seewo</groupId>
+                <groupId>com.janmee</groupId>
                 <artifactId>web-core</artifactId>
                 <version>${web-core.version}</version>
             </dependency>
@@ -98,12 +96,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-pool2</artifactId>
                 <version>2.3</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.shiro</groupId>
-                <artifactId>shiro-core</artifactId>
-                <version>${shiro.version}</version>
             </dependency>
 
             <!--module-monitor-sdk-->
@@ -321,6 +313,18 @@
                 <artifactId>webmagic-extension</artifactId>
                 <version>0.5.3</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-core</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-web</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

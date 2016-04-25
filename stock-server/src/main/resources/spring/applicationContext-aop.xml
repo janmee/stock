@@ -33,12 +33,4 @@
         <property name="advice" ref="druid-stat-interceptor" />
     </bean>
 
-    <!-- 检测@ModuleMonitor注解方法的执行效率 -->
-    <bean id="serviceMethodMonitor" class="com.seewo.core.monitor.MonitorService"></bean>
-    <aop:config>
-        <aop:pointcut id="serviceMethod" expression="@annotation(com.seewo.core.monitor.ModuleMonitor)" />
-        <aop:aspect ref="serviceMethodMonitor">
-            <aop:around method="aroundAdvice" pointcut-ref="serviceMethod" />
-        </aop:aspect>
-    </aop:config>
 </beans>
