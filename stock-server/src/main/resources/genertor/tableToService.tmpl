@@ -13,13 +13,11 @@ public interface <%=className%>Service {
 
 	Page<<%=className%>> findAll(<%=className%>Query query, Pageable pageable);
 
-	<%=className%> findOneByUid(String uid);
+	<%=className%> findOne(String id);
 
 	<%=className%> create(<%=className%> <%=className.lowerFirst()%>);
 
 	<%=className%> update(<%=className%> <%=className.lowerFirst()%>);
 
-	void logicDeleteByUid(String uid);
-
-    List<<%=className%>> findAllByUids(List<String> uids);
+	void delete(String id);
 }

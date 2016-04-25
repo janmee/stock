@@ -1,6 +1,5 @@
 package com.janmee.stock.entity;
 
-import com.seewo.core.base.UidEntity;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.hibernate.annotations.Where;
 
@@ -12,10 +11,10 @@ import java.util.Date;
 @Entity
 @Table(name = "<%=tableName%>")
 @Where(clause = "is_deleted=0")
-public class <%=className%> extends UidEntity {
+public class <%=className%> extends IdEntity{
     <%
     _.forEach(columns, function(column){
-        if(column.Field=='uid' ||column.Field=='id' || column.Field=='is_deleted'|| column.Field=='created_at'|| column.Field=='updated_at') return;
+        if(column.Field=='uid' ||column.Field=='id' || column.Field=='created_at'|| column.Field=='updated_at') return;
     %>
     /**
      * <%=column.Comment%>
@@ -24,7 +23,7 @@ public class <%=className%> extends UidEntity {
     <%
     });
     _.forEach(columns, function(column){
-        if(column.Field=='uid' ||column.Field=='id' || column.Field=='is_deleted'|| column.Field=='created_at'|| column.Field=='updated_at') return;
+        if(column.Field=='uid' ||column.Field=='id' || column.Field=='created_at'|| column.Field=='updated_at') return;
     if(column.Type=='text'){%>
     @Column(columnDefinition = "TEXT")<%}%>
     public <%=column.JavaType%> get<%=column.JavaField.capitalizeFirstLetter()%>() {

@@ -1,17 +1,15 @@
-package com.janmee.stock.entity;
+package com.janmee.stock.vo.query;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.hibernate.annotations.Where;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import com.seewo.core.base.BaseQuery;
 import java.util.Date;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
-@Entity
-@Table(name = "stock")
-@Where(clause = "is_deleted=0")
-public class Stock extends IdEntity{
+public class StockQuery extends BaseQuery {
+    
+    /**
+     * 
+     */
+    private Integer id;
     
     /**
      * 名字
@@ -52,6 +50,14 @@ public class Stock extends IdEntity{
      * 上市地
      */
     private String market;
+    
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id){
+        this.id = id;
+    }
     
     public String getName() {
         return name;

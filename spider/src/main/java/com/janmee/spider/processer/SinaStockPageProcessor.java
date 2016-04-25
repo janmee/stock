@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
  * @version 1.0
  */
 public class SinaStockPageProcessor implements PageProcessor {
-    private static final int TOTAL_PAGE = 448;
-    private Site site = Site.me().setRetryTimes(20).setSleepTime(100);
+    private static final int TOTAL_PAGE = 150;
+    private Site site = Site.me().setRetryTimes(100).setSleepTime(100).setTimeOut(10000);
     private static StockService stockService = new StockService();
 
     // process是定制爬虫逻辑的核心接口，在这里编写抽取逻辑
@@ -43,7 +43,7 @@ public class SinaStockPageProcessor implements PageProcessor {
         //设置要爬去的页面
         String[] request = new String[TOTAL_PAGE];
         for (int i = 0; i < TOTAL_PAGE; i++) {
-            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=20&sort=&asc=0&market=&id=";
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=60&sort=&asc=0&market=&id=";
         }
         Spider.create(new SinaStockPageProcessor()).addUrl(request).thread(5).run();
     }

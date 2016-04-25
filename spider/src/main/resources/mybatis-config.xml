@@ -31,15 +31,20 @@
         <typeAlias alias="StockBean"
                    type="com.janmee.spider.entity.Stock" />
     </typeAliases>
+    <!--<plugins>-->
+        <!--<plugin interceptor="com.google.code.shardbatis.plugin.ShardPlugin">-->
+            <!--<property name="shardingConfig" value="shard_config.xml"/>-->
+        <!--</plugin>-->
+    <!--</plugins>-->
     <!-- Data Source -->
         <environments default="development">
              <environment id="development">
                  <transactionManager type="JDBC" />
                  <dataSource type="POOLED">
                      <property name="driver" value="com.mysql.jdbc.Driver" />
-                     <property name="url" value="jdbc:mysql://localhost:3306/stock?characterEncoding=UTF-8" />
-                     <property name="username" value="root" />
-                     <property name="password" value="13662542862" />
+                     <property name="url" value="jdbc:mysql://172.18.80.56:3306/seewo_analysis_online?characterEncoding=UTF-8" />
+                     <property name="username" value="seewo" />
+                     <property name="password" value="seewo@cvte" />
                  </dataSource>
              </environment>
          </environments>

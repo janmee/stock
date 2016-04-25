@@ -4,9 +4,9 @@ import com.seewo.core.base.Constants;
 import com.seewo.core.base.DataMap;
 import com.seewo.core.util.bean.BeanUtils;
 import com.janmee.stock.base.StatusCode;
-import com.janmee.stock.entity.<%=className%>;
-import com.janmee.stock.service.<%=className%>Service;
-import com.janmee.stock.vo.query.<%=className%>Query;
+import com.janmee.stock.entity.Stock;
+import com.janmee.stock.service.StockService;
+import com.janmee.stock.vo.query.StockQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,18 +22,18 @@ import org.springframework.http.HttpStatus;
 
 
 @RestController
-@RequestMapping("/api/v1/<%=className.lowerFirst()%>s")
-public class <%=className%>Controller {
+@RequestMapping("/api/v1/stocks")
+public class StockController {
 
     @Autowired
-    private <%=className%>Service <%=className.lowerFirst()%>Service;
+    private StockService stockService;
 
     /**
      * 条件查询
      */
     @RequestMapping
-    public DataMap show<%=className%>s(<%=className%>Query query, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<<%=className%>> page = <%=className.lowerFirst()%>Service.findAll(query,pageable);
+    public DataMap showStocks(StockQuery query, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<Stock> page = stockService.findAll(query,pageable);
         return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
                 .addAttribute(Constants.DATA, page);
     }
@@ -42,10 +42,10 @@ public class <%=className%>Controller {
      * 单个查询
      */
     @RequestMapping(value = "/{id}")
-    public DataMap show<%=className%>(@PathVariable String id) {
+    public DataMap showStock(@PathVariable String id) {
         DataMap dataMap = new DataMap();
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
-        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.findOne(id));
+        dataMap.addAttribute(Constants.DATA, stockService.findOne(id));
         return dataMap;
     }
 
@@ -53,9 +53,9 @@ public class <%=className%>Controller {
      * 新增
      */
     @RequestMapping(method = RequestMethod.POST)
-    public DataMap create(@RequestBody <%=className%> <%=className.lowerFirst()%>) {
+    public DataMap create(@RequestBody Stock stock) {
         DataMap dataMap = new DataMap();
-        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.create(<%=className.lowerFirst()%>));
+        dataMap.addAttribute(Constants.DATA, stockService.create(stock));
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
         return dataMap;
     }
@@ -64,11 +64,11 @@ public class <%=className%>Controller {
      * 更新
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public DataMap update(@PathVariable String id, @RequestBody <%=className%> <%=className.lowerFirst()%>) {
+    public DataMap update(@PathVariable String id, @RequestBody Stock stock) {
         DataMap dataMap = new DataMap();
-        <%=className%> persist<%=className%> = <%=className.lowerFirst()%>Service.findOne(id);
-        BeanUtils.copyProperties(<%=className.lowerFirst()%>, persist<%=className%>, "id", "id", "createdAt" ,"isDeleted");
-        dataMap.addAttribute(Constants.DATA, <%=className.lowerFirst()%>Service.update(persist<%=className%>));
+        Stock persistStock = stockService.findOne(id);
+        BeanUtils.copyProperties(stock, persistStock, "id", "id", "createdAt" ,"isDeleted");
+        dataMap.addAttribute(Constants.DATA, stockService.update(persistStock));
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
         return dataMap;
     }
@@ -79,7 +79,7 @@ public class <%=className%>Controller {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public DataMap delete(@PathVariable String id) {
         DataMap dataMap = new DataMap();
-        <%=className.lowerFirst()%>Service.delete(id);
+        stockService.delete(id);
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
         return dataMap;
     }

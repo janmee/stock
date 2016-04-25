@@ -49,6 +49,9 @@ public class StockService {
         SqlSession session = sqlSessionFactory.openSession();
         StockDao stockDao = session.getMapper(StockDao.class);
         try {
+//            for (Stock stock : stocks){
+//                stockDao.insert(stock);
+//            }
             stockDao.insertBatch(stocks);
             session.commit();
         }catch (Exception e) {

@@ -46,11 +46,13 @@ public class StockDailyService {
         }
     }
 
-    public void insertBatch(List<StockDaily>stockDailies,Integer stockId){
+    public void insertBatch(List<StockDaily>stockDailies,Stock stock){
         SqlSession session = sqlSessionFactory.openSession();
         StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
         for (StockDaily stockDaily : stockDailies){
-            stockDaily.setStockId(stockId);
+            stockDaily.setStockId(stock.getId());
+            stockDaily.setStockCname(stock.getName());
+            stockDaily.setStockSymbol(stock.getSymbol());
         }
         try {
             stockDailyDao.insertBatch(stockDailies);

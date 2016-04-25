@@ -38,9 +38,9 @@ public class <%=className%>ServiceImpl implements <%=className%>Service {
 	}
 
 	@Override
-	public <%=className%> findOneByUid(String uid) {
-		return <%=className.lowerFirst()%>Dao.findOneByUid(uid);
-	}
+    public <%=className%> findOne(String id) {
+        return <%=className.lowerFirst()%>Dao.findOne(id);
+    }
 
 	@Override
 	public <%=className%> create(<%=className%> <%=className.lowerFirst()%>) {
@@ -53,14 +53,9 @@ public class <%=className%>ServiceImpl implements <%=className%>Service {
 	}
 
 	@Override
-	public void logicDeleteByUid(String uid){
-		<%=className.lowerFirst()%>Dao.logicDeleteByUid(uid);
+	public void delete(String id){
+		<%=className.lowerFirst()%>Dao.delete(id);
 	}
-
-	@Override
-    public List<<%=className%>> findAllByUids(List<String> uids) {
-        return <%=className.lowerFirst()%>Dao.findAllByUids(uids);
-    }
 
 	/**
      * 创建动态查询条件组合.

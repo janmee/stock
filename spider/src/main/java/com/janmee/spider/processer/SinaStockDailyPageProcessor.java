@@ -19,8 +19,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  */
 public class SinaStockDailyPageProcessor implements PageProcessor {
-    private static final int TOTAL_PAGE = 448;
-    private Site site = Site.me().setRetryTimes(3).setSleepTime(0);
+    private Site site = Site.me().setRetryTimes(100).setSleepTime(100).setTimeOut(10000);
     private static StockService stockService = new StockService();
     private static StockDailyService stockDailyService = new StockDailyService();
 
@@ -37,7 +36,7 @@ public class SinaStockDailyPageProcessor implements PageProcessor {
             String jsonStr = matcher.group(1);
             System.out.println("json:" + jsonStr);
             List<StockDaily> stockDailies = JSONArray.parseArray(jsonStr, StockDaily.class);
-            stockDailyService.insertBatch(stockDailies,stock.getId());
+            stockDailyService.insertBatch(stockDailies,stock);
         }
     }
 
@@ -52,6 +51,6 @@ public class SinaStockDailyPageProcessor implements PageProcessor {
         for (int i = 0; i < stocks.size(); i++) {
             request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + stocks.get(i).getSymbol();
         }
-        Spider.create(new SinaStockDailyPageProcessor()).addUrl(request).thread(5).run();
+        Spider.create(new SinaStockDailyPageProcessor()).addUrl(request).thread(3).run();
     }
 }

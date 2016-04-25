@@ -7,7 +7,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class <%=className%>Query extends BaseQuery {
     <%
     _.forEach(columns, function(column){
-        if(column.Field=='id' || column.Field=='is_deleted'|| column.Field=='created_at'|| column.Field=='updated_at') return;
+        if(column.Field=='created_at'|| column.Field=='updated_at') return;
     %>
     /**
      * <%=column.Comment%>
@@ -17,7 +17,7 @@ public class <%=className%>Query extends BaseQuery {
     });
 
     _.forEach(columns, function(column){
-        if(column.Field=='id' || column.Field=='is_deleted'|| column.Field=='created_at'|| column.Field=='updated_at') return;
+        if(column.Field=='created_at'|| column.Field=='updated_at') return;
     %>
     public <%=column.JavaType%> get<%=column.JavaField.capitalizeFirstLetter()%>() {
         return <%=column.JavaField%>;

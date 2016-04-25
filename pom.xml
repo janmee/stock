@@ -50,6 +50,15 @@
                 <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
+
+        <repository>
+            <id>shardbaits</id>
+            <name>shardbaits repository</name>
+            <url>http://shardbatis.googlecode.com/svn/trunk/repository</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
     </repositories>
 
     <dependencyManagement>
