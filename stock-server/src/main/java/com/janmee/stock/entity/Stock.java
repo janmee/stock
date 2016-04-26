@@ -10,7 +10,6 @@ import java.util.Date;
 
 @Entity
 @Table(name = "stock")
-@Where(clause = "is_deleted=0")
 public class Stock extends IdEntity{
     
     /**
@@ -39,7 +38,7 @@ public class Stock extends IdEntity{
     private String symbol;
     
     /**
-     * mktcap
+     * 市值
      */
     private String mktcap;
     

@@ -71,6 +71,10 @@ var typeToJava = [
     {
         reg: /double/,
         type: 'Double'
+    },
+    {
+        reg: /bigint/,
+        type: 'Long'
     }
 
 ];

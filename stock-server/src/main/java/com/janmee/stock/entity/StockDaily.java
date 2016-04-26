@@ -6,17 +6,27 @@ import org.hibernate.annotations.Where;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.math.BigInteger;
 import java.util.Date;
 
 @Entity
 @Table(name = "stock_daily")
-@Where(clause = "is_deleted=0")
 public class StockDaily extends IdEntity{
     
     /**
      * 
      */
     private Integer stockId;
+    
+    /**
+     * 
+     */
+    private String stockCname;
+    
+    /**
+     * 
+     */
+    private String stockSymbol;
     
     /**
      * 
@@ -44,9 +54,9 @@ public class StockDaily extends IdEntity{
     private Double current;
     
     /**
-     * 成交量
+     * 
      */
-    private Integer volume;
+    private Long volume;
     
     public Integer getStockId() {
         return stockId;
@@ -54,6 +64,22 @@ public class StockDaily extends IdEntity{
 
     public void setStockId(Integer stockId){
         this.stockId = stockId;
+    }
+    
+    public String getStockCname() {
+        return stockCname;
+    }
+
+    public void setStockCname(String stockCname){
+        this.stockCname = stockCname;
+    }
+    
+    public String getStockSymbol() {
+        return stockSymbol;
+    }
+
+    public void setStockSymbol(String stockSymbol){
+        this.stockSymbol = stockSymbol;
     }
     
     public Date getDate() {
@@ -96,11 +122,11 @@ public class StockDaily extends IdEntity{
         this.current = current;
     }
     
-    public Integer getVolume() {
+    public Long getVolume() {
         return volume;
     }
 
-    public void setVolume(Integer volume){
+    public void setVolume(Long volume){
         this.volume = volume;
     }
     

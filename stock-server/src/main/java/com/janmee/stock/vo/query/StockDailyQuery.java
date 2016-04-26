@@ -19,6 +19,16 @@ public class StockDailyQuery extends BaseQuery {
     /**
      * 
      */
+    private String stockCname;
+    
+    /**
+     * 
+     */
+    private String stockSymbol;
+    
+    /**
+     * 
+     */
     private Date date;
     
     /**
@@ -42,9 +52,9 @@ public class StockDailyQuery extends BaseQuery {
     private Double current;
     
     /**
-     * 成交量
+     * 
      */
-    private Integer volume;
+    private Long volume;
     
     public Integer getId() {
         return id;
@@ -60,6 +70,22 @@ public class StockDailyQuery extends BaseQuery {
 
     public void setStockId(Integer stockId){
         this.stockId = stockId;
+    }
+    
+    public String getStockCname() {
+        return stockCname;
+    }
+
+    public void setStockCname(String stockCname){
+        this.stockCname = stockCname;
+    }
+    
+    public String getStockSymbol() {
+        return stockSymbol;
+    }
+
+    public void setStockSymbol(String stockSymbol){
+        this.stockSymbol = stockSymbol;
     }
     
     public Date getDate() {
@@ -102,11 +128,11 @@ public class StockDailyQuery extends BaseQuery {
         this.current = current;
     }
     
-    public Integer getVolume() {
+    public Long getVolume() {
         return volume;
     }
 
-    public void setVolume(Integer volume){
+    public void setVolume(Long volume){
         this.volume = volume;
     }
     

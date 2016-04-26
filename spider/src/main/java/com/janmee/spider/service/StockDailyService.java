@@ -48,6 +48,20 @@ public class StockDailyService {
         }
     }
 
+    public void insertBatch(List<StockDaily> stockDailies) {
+        SqlSession session = sqlSessionFactory.openSession();
+        StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
+        try {
+            stockDailyDao.insertBatch(stockDailies);
+            session.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.rollback();
+        } finally {
+            session.close();
+        }
+    }
+
     public void insertBatch(List<StockDaily> stockDailies, Stock stock) {
         SqlSession session = sqlSessionFactory.openSession();
         StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
