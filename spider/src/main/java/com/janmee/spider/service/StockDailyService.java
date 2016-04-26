@@ -3,6 +3,7 @@ package com.janmee.spider.service;
 import com.janmee.spider.dao.StockDailyDao;
 import com.janmee.spider.entity.Stock;
 import com.janmee.spider.entity.StockDaily;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -18,7 +19,8 @@ import java.util.List;
 public class StockDailyService {
     private static SqlSessionFactory sqlSessionFactory = null;
     private static StockDailyDao stockDailyDao = null;
-    public StockDailyService(){
+
+    public StockDailyService() {
         this.init();
     }
 
@@ -38,44 +40,44 @@ public class StockDailyService {
             StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
             stockDailyDao.insert(stockDaily);
             session.commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             session.rollback();
-        }finally {
+        } finally {
             session.close();
         }
     }
 
-    public void insertBatch(List<StockDaily>stockDailies,Stock stock){
+    public void insertBatch(List<StockDaily> stockDailies, Stock stock) {
         SqlSession session = sqlSessionFactory.openSession();
         StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
-        for (StockDaily stockDaily : stockDailies){
+        for (StockDaily stockDaily : stockDailies) {
             stockDaily.setStockId(stock.getId());
-            stockDaily.setStockCname(stock.getName());
+            stockDaily.setStockCname(StringUtils.isNotEmpty(stock.getCname()) ? stock.getCname() : stock.getName());
             stockDaily.setStockSymbol(stock.getSymbol());
         }
         try {
             stockDailyDao.insertBatch(stockDailies);
             session.commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             session.rollback();
-        }finally {
+        } finally {
             session.close();
         }
     }
 
-    public List<Stock> selectAll(){
+    public List<Stock> selectAll() {
         SqlSession session = sqlSessionFactory.openSession();
         StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
-        List<Stock>stocks = null;
+        List<Stock> stocks = null;
         try {
 //            stocks = stockDailyDao.selectAll();
             session.commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             session.rollback();
-        }finally {
+        } finally {
             session.close();
         }
         return stocks;

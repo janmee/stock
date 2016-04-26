@@ -10,6 +10,7 @@ import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,15 +19,16 @@ import java.util.regex.Pattern;
  * @author luojianming on 2016/4/22.
  * @version 1.0
  */
-public class SinaStockDailyPageProcessor implements PageProcessor {
+public class DailyRestPageProcessor implements PageProcessor {
     private Site site = Site.me().setRetryTimes(100).setSleepTime(100).setTimeOut(10000);
     private static StockService stockService = new StockService();
     private static StockDailyService stockDailyService = new StockDailyService();
+    private static double MAX_PRICE = 9999999;
 
     // process是定制爬虫逻辑的核心接口，在这里编写抽取逻辑
     public void process(Page page) {
         String requestUrl = page.getRequest().getUrl();
-        String symbol = requestUrl.substring(requestUrl.lastIndexOf("=")+1,requestUrl.length());
+        String symbol = requestUrl.substring(requestUrl.lastIndexOf("=") + 1, requestUrl.length());
         // 部分二：定义如何抽取页面信息，并保存下来
         Pattern pattern = Pattern.compile("var data=\\((.*)\\)");
         String rawText = page.getRawText();
@@ -37,6 +39,11 @@ public class SinaStockDailyPageProcessor implements PageProcessor {
             System.out.println("json:" + jsonStr);
             List<StockDaily> stockDailies = JSONArray.parseArray(jsonStr, StockDaily.class);
             if (stockDailies != null && stockDailies.size() > 0) {
+                List<StockDaily> remove = new ArrayList<StockDaily>();
+                for (StockDaily stockDaily : stockDailies) {
+                    if (stockDaily.getOpen() < 0) remove.add(stockDaily);
+                }
+                stockDailies.removeAll(remove);
                 stockDailyService.insertBatch(stockDailies, stock);
             }
         }
@@ -47,12 +54,12 @@ public class SinaStockDailyPageProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        List<Stock> stocks = stockService.selectAll();
+        String[] symbols = {"SF"};
         //设置要爬去的页面
-        String[] request = new String[stocks.size()];
-        for (int i = 0; i < stocks.size(); i++) {
-            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + stocks.get(i).getSymbol();
+        String[] request = new String[symbols.length];
+        for (int i = 0; i < symbols.length; i++) {
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + symbols[i];
         }
-        Spider.create(new SinaStockDailyPageProcessor()).addUrl(request).thread(3).run();
+        Spider.create(new DailyRestPageProcessor()).addUrl(request).thread(3).run();
     }
 }
