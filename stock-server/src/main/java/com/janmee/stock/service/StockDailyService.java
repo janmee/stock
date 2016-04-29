@@ -22,5 +22,5 @@ public interface StockDailyService {
 
     void delete(String id);
 
-    List<String> findByStragegy(Date date, Integer times ,Long minVolume);
+    List<String> findByStragegy(Date date, Double times ,Long minVolume);
 }

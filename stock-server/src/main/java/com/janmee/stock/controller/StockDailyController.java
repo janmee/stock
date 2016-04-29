@@ -85,7 +85,7 @@ public class StockDailyController {
      * 策略查询
      */
     @RequestMapping(value = "/strategy")
-    public DataMap findByStragegy(String date, Integer times, Long minVolume, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    public DataMap findByStragegy(String date, Double times, Long minVolume, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Date d = DateUtils.convertToDate(date);
         return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
                 .addAttribute(Constants.DATA, stockDailyService.findByStragegy(d, times ,minVolume));

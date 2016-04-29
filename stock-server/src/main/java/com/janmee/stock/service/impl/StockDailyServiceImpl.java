@@ -116,16 +116,11 @@ public class StockDailyServiceImpl implements StockDailyService {
     }
 
 
-    public List<String> findByStragegy(Date date, Integer times ,Long minVolume) {
-        Date now = null;
-        try {
-            now = DateUtils.formatDate(date, "yyyy-MM-DD");
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+    public List<String> findByStragegy(Date date, Double times ,Long minVolume) {
+        Date now = date;
         //今天数据
         List<StockDaily> todayStockDailies = stockDailyDao.findByDate(now);
-        Date lastWeekDay = getLastWeekDay(now);
+        Date lastWeekDay = getLastWeekDay(now,-1);
         //昨天数据
         List<StockDaily> oldStockDailies = stockDailyDao.findByDate(lastWeekDay);
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
@@ -149,20 +144,19 @@ public class StockDailyServiceImpl implements StockDailyService {
      *
      * @return
      */
-    private Date getLastWeekDay(Date date) {
+    private Date getLastWeekDay(Date date,int last) {
+        Date lastWeekDay = DateUtils.addDays(date, last);
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
+        cal.setTime(lastWeekDay);
         int w = cal.get(Calendar.DAY_OF_WEEK);
-        Date lastWeekDay = null;
         switch (w) {
-            case 1:
-                lastWeekDay = DateUtils.addDays(date, -2);
+            case 7:
+                lastWeekDay = DateUtils.addDays(lastWeekDay, -1);
                 break;
-            case 2:
-                lastWeekDay = DateUtils.addDays(date, -3);
+            case 1:
+                lastWeekDay = DateUtils.addDays(lastWeekDay, -2);
                 break;
             default:
-                lastWeekDay = DateUtils.addDays(date, -1);
                 break;
         }
         try {
