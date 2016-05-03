@@ -6,6 +6,7 @@ import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.util.bean.ObjectUtils;
+import com.seewo.core.util.collection.CollectionUtils;
 import com.seewo.core.util.date.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,15 +117,32 @@ public class StockDailyServiceImpl implements StockDailyService {
     }
 
 
-    public List<String> findByStragegy(Date date, Double times ,Long minVolume) {
+    public List<String> findByStragegy(Date date, Double times, Long minVolume) {
         Date now = date;
         //今天数据
         List<StockDaily> todayStockDailies = stockDailyDao.findByDate(now);
-        Date lastWeekDay = getLastWeekDay(now,-1);
+        List<StockDaily> stockDailies = findByOneDayVolumeLarge(date, times, minVolume, todayStockDailies);
+        List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
+        return symbols;
+    }
+
+    /**
+     * 根据当天成交量放大查找
+     *
+     * @return
+     */
+    public List<StockDaily> findByOneDayVolumeLarge(Date date, Double times, Long minVolume, List<StockDaily> todayStockDailies) {
+        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
+        Date lastWeekDay = date;
         //昨天数据
-        List<StockDaily> oldStockDailies = stockDailyDao.findByDate(lastWeekDay);
+        List<StockDaily> oldStockDailies = null;
+        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
+            //上一交易日数据
+            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        }
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
-        List<String> symbols = new ArrayList<>();
+        List<StockDaily> rets = new ArrayList<>();
         for (StockDaily todayStockDaily : todayStockDailies) {
             if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
                 StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
@@ -133,18 +151,21 @@ public class StockDailyServiceImpl implements StockDailyService {
                         && todayStockDaily.getCurrent() > todayStockDaily.getLow()
                         && todayStockDaily.getVolume().longValue() > minVolume
                         )
-                    symbols.add(todayStockDaily.getStockSymbol());
+                    rets.add(todayStockDaily);
             }
         }
-        return symbols;
+        return rets;
     }
+
+//    public List<String>
+
 
     /**
      * 获取上一个交易日
      *
      * @return
      */
-    private Date getLastWeekDay(Date date,int last) {
+    private Date getLastWeekDay(Date date, int last) {
         Date lastWeekDay = DateUtils.addDays(date, last);
         Calendar cal = Calendar.getInstance();
         cal.setTime(lastWeekDay);
