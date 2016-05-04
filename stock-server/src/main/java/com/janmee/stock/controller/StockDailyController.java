@@ -4,18 +4,16 @@ import com.janmee.stock.base.StatusCode;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.vo.query.StockDailyQuery;
+import com.janmee.stock.vo.query.StragegyParam;
 import com.seewo.core.base.Constants;
 import com.seewo.core.base.DataMap;
 import com.seewo.core.util.bean.BeanUtils;
-import com.seewo.core.util.date.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
 
 
 @RestController
@@ -85,10 +83,9 @@ public class StockDailyController {
      * 策略查询
      */
     @RequestMapping(value = "/strategy")
-    public DataMap findByStragegy(String date, Double times, Long minVolume, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Date d = DateUtils.convertToDate(date);
+    public DataMap findByStragegy(StragegyParam stragegyParam, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
-                .addAttribute(Constants.DATA, stockDailyService.findByStragegy(d, times ,minVolume));
+                .addAttribute(Constants.DATA, stockDailyService.findByStragegy(stragegyParam));
     }
 
 }

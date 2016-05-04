@@ -5,6 +5,7 @@ import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.vo.query.StockDailyQuery;
+import com.janmee.stock.vo.query.StragegyParam;
 import com.seewo.core.util.bean.ObjectUtils;
 import com.seewo.core.util.collection.CollectionUtils;
 import com.seewo.core.util.date.DateUtils;
@@ -117,11 +118,20 @@ public class StockDailyServiceImpl implements StockDailyService {
     }
 
 
-    public List<String> findByStragegy(Date date, Double times, Long minVolume) {
-        Date now = date;
+    public List<String> findByStragegy(StragegyParam stragegyParam) {
+        List<Integer> stragegyTypes = stragegyParam.getStragegyType();
+        Date now = stragegyParam.getDate();
         //今天数据
-        List<StockDaily> todayStockDailies = stockDailyDao.findByDate(now);
-        List<StockDaily> stockDailies = findByOneDayVolumeLarge(date, times, minVolume, todayStockDailies);
+        List<StockDaily> stockDailies = stockDailyDao.findByDate(now);
+        if (stockDailies.size() != 0) {
+            for (Integer type : stragegyTypes) {
+                if (type == StragegyParam.Type.OneDayVolumeLarge.getType()) {
+                    stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
+                } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
+                    stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
+                }
+            }
+        }
         List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
         return symbols;
     }
@@ -131,16 +141,20 @@ public class StockDailyServiceImpl implements StockDailyService {
      *
      * @return
      */
-    public List<StockDaily> findByOneDayVolumeLarge(Date date, Double times, Long minVolume, List<StockDaily> todayStockDailies) {
+    private List<StockDaily> findByOneDayVolumeLarge(Date date, Double times, Long minVolume, List<StockDaily> todayStockDailies) {
+        if (todayStockDailies == null || todayStockDailies.size() == 0)return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
         Date lastWeekDay = date;
         //昨天数据
         List<StockDaily> oldStockDailies = null;
-        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+        int i = 0;
+        while ((oldStockDailies == null || oldStockDailies.size() == 0) && i < 7) {
             lastWeekDay = getLastWeekDay(lastWeekDay, -1);
             //上一交易日数据
             oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+            i++;
         }
+        if (oldStockDailies == null || oldStockDailies.size() == 0)return new ArrayList<>();
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
         List<StockDaily> rets = new ArrayList<>();
         for (StockDaily todayStockDaily : todayStockDailies) {
@@ -157,7 +171,34 @@ public class StockDailyServiceImpl implements StockDailyService {
         return rets;
     }
 
-//    public List<String>
+    /**
+     * 根据多天低价查找
+     *
+     * @param todayStockDailies
+     * @return
+     */
+    private List<StockDaily> findByDaysLowPrice(Date date, Integer days, Double lowTimes, List<StockDaily> todayStockDailies) {
+        if (todayStockDailies == null || todayStockDailies.size() == 0)return new ArrayList<>();
+        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
+        //多天前数据
+        Date lastWeekDay = getLastWeekDay(date, -days);
+        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
+            //上一交易日数据
+            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        }
+        Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
+        List<StockDaily> rets = new ArrayList<>();
+        for (StockDaily todayStockDaily : todayStockDailies) {
+            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
+                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
+                if (todayStockDaily.getCurrent() != 0 && todayStockDaily.getCurrent() < lowTimes * oldStockDaily.getCurrent())
+                    rets.add(todayStockDaily);
+            }
+        }
+        return rets;
+    }
 
 
     /**
