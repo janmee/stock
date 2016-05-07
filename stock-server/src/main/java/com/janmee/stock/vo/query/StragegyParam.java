@@ -24,16 +24,6 @@ public class StragegyParam {
         public int getType() {
             return type;
         }
-
-        public static Type getInstance(int type) {
-            Type[] types = Type.values();
-            for (Type t : types) {
-                if (t.type == type) {
-                    return t;
-                }
-            }
-            return null;
-        }
     }
 
     private List<Integer> stragegyType;
