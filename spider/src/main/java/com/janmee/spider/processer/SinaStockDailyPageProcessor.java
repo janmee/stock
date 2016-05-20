@@ -53,6 +53,6 @@ public class SinaStockDailyPageProcessor implements PageProcessor {
         for (int i = 0; i < stocks.size(); i++) {
             request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + stocks.get(i).getSymbol();
         }
-        Spider.create(new SinaStockDailyPageProcessor()).addUrl(request).thread(3).run();
+        Spider.create(new SinaStockDailyPageProcessor()).addUrl(request).thread(6).run();
     }
 }

@@ -78,6 +78,22 @@ public class StockService {
         return stocks;
     }
 
+    public List<Stock> selectNotExist(){
+        SqlSession session = sqlSessionFactory.openSession();
+        StockDao stockDao = session.getMapper(StockDao.class);
+        List<Stock>stocks = null;
+        try {
+            stocks = stockDao.selectNotExist();
+            session.commit();
+        }catch (Exception e) {
+            e.printStackTrace();
+            session.rollback();
+        }finally {
+            session.close();
+        }
+        return stocks;
+    }
+
     public Stock selectBySymbol(String symbol){
         SqlSession session = sqlSessionFactory.openSession();
         StockDao stockDao = session.getMapper(StockDao.class);

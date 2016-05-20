@@ -54,11 +54,12 @@ public class DailyRestPageProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        String[] symbols = {"SF"};
+//        String[] symbols = {"AGGY","AGII","BOS","CAD"};
+        List<Stock> stocks = stockService.selectNotExist();
         //设置要爬去的页面
-        String[] request = new String[symbols.length];
-        for (int i = 0; i < symbols.length; i++) {
-            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + symbols[i];
+        String[] request = new String[stocks.size()];
+        for (int i = 0; i < stocks.size(); i++) {
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + stocks.get(i).getSymbol();
         }
         Spider.create(new DailyRestPageProcessor()).addUrl(request).thread(3).run();
     }

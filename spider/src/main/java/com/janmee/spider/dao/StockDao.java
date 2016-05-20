@@ -58,5 +58,7 @@ public interface StockDao {
 
     List<Stock> selectAll();
 
+    List<Stock> selectNotExist();
+
     Stock selectBySymbol(String symbol);
 }

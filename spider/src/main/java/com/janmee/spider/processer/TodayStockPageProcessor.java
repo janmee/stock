@@ -74,7 +74,7 @@ public class TodayStockPageProcessor implements PageProcessor {
         //设置要爬去的页面
         String[] request = new String[TOTAL_PAGE];
         for (int i = 0; i < TOTAL_PAGE; i++) {
-            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=60&sort=&asc=0&market=&id=";
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=60";
         }
         Spider.create(new TodayStockPageProcessor()).addUrl(request).thread(5).run();
     }
