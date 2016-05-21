@@ -2,12 +2,12 @@ package com.janmee.stock.service;
 
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.vo.query.StockDailyQuery;
-import com.janmee.stock.vo.query.StragegyParam;
+import com.janmee.stock.vo.StragegyParam;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface StockDailyService {
 
@@ -24,4 +24,6 @@ public interface StockDailyService {
     void delete(String id);
 
     List<String> findByStragegy(StragegyParam stragegyParam);
+
+    public Map<String,List<String>> scanAllDate(StragegyParam stragegyParam);
 }

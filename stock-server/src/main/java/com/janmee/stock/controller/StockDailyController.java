@@ -4,7 +4,7 @@ import com.janmee.stock.base.StatusCode;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.vo.query.StockDailyQuery;
-import com.janmee.stock.vo.query.StragegyParam;
+import com.janmee.stock.vo.StragegyParam;
 import com.seewo.core.base.Constants;
 import com.seewo.core.base.DataMap;
 import com.seewo.core.util.bean.BeanUtils;
@@ -86,6 +86,15 @@ public class StockDailyController {
     public DataMap findByStragegy(StragegyParam stragegyParam, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
                 .addAttribute(Constants.DATA, stockDailyService.findByStragegy(stragegyParam));
+    }
+
+    /**
+     * 时间范围内扫描
+     */
+    @RequestMapping(value = "/scan")
+    public DataMap scan(StragegyParam stragegyParam, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
+                .addAttribute(Constants.DATA, stockDailyService.scanAllDate(stragegyParam));
     }
 
 }

@@ -25,9 +25,9 @@
 		<property name="minEvictableIdleTimeMillis" value="300000" />
 
 		<!-- 超过时间限制是否回收 -->
-		<property name="removeAbandoned" value="true" />
+		<property name="removeAbandoned" value="false" />
 		<!-- 超时时间；单位为秒。600秒=10分钟 -->
-		<property name="removeAbandonedTimeout" value="600" />
+		<property name="removeAbandonedTimeout" value="6000" />
 		<!-- 关闭abanded连接时输出错误日志 -->
 		<property name="logAbandoned" value="false" />
 

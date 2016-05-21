@@ -1,4 +1,4 @@
-package com.janmee.stock.vo.query;
+package com.janmee.stock.vo;
 
 import com.seewo.core.util.date.DateUtils;
 

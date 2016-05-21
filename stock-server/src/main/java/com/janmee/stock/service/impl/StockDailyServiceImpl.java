@@ -4,8 +4,10 @@ import com.janmee.stock.base.utils.MapUtils;
 import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
+import com.janmee.stock.vo.DaySymbolVo;
+import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
-import com.janmee.stock.vo.query.StragegyParam;
+import com.seewo.core.util.bean.BeanUtils;
 import com.seewo.core.util.bean.ObjectUtils;
 import com.seewo.core.util.collection.CollectionUtils;
 import com.seewo.core.util.date.DateUtils;
@@ -21,6 +23,7 @@ import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.*;
 
 @Service
 @Transactional
@@ -117,6 +120,65 @@ public class StockDailyServiceImpl implements StockDailyService {
         };
     }
 
+    class MyCallable implements Callable<Object> {
+        private StragegyParam stragegyParam;
+
+        MyCallable(StragegyParam stragegyParam) {
+            this.stragegyParam = stragegyParam;
+        }
+
+        @Override
+        public Object call() throws Exception {
+            List<String> symbols = findByStragegy(stragegyParam);
+            return new DaySymbolVo(DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE), symbols);
+        }
+    }
+
+    public Map<String, List<String>> scanAllDate(StragegyParam stragegyParam) {
+        Date date1 = new Date();
+        List<Integer> stragegyTypes = stragegyParam.getStragegyType();
+        Date now = stragegyParam.getDate();
+        Date endDate = DateUtils.convertToDate("2014-01-01");
+        Map<String, List<String>> map = new HashMap<>();
+        // 创建一个线程池
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        // 创建多个有返回值的任务
+        List<Future> list = new ArrayList<Future>();
+        for (now = getLastWeekDay(now, 0); now.compareTo(endDate) >= 0; now = getLastWeekDay(now, -1)) {
+            StragegyParam newParam = new StragegyParam();
+            BeanUtils.copyProperties(stragegyParam, newParam);
+            newParam.setDate(DateUtils.formatDateStr(now, DateUtils.PATTREN_DATE));
+            Callable c = new MyCallable(newParam);
+            // 执行任务并获取Future对象
+            Future f = pool.submit(c);
+            // System.out.println(">>>" + f.get().toString());
+            list.add(f);
+        }
+        // 关闭线程池
+        pool.shutdown();
+
+        // 获取所有并发任务的运行结果
+        for (Future f : list) {
+            // 从Future对象上获取任务的返回值，并输出到控制台
+            try {
+                DaySymbolVo daySymbolVo = (DaySymbolVo) f.get();
+                if (daySymbolVo.getSymbols().size() > 0) {
+                    map.put(daySymbolVo.getDate(), daySymbolVo.getSymbols());
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Date date2 = new Date();
+        System.out.println("----程序结束运行----，程序运行时间【"
+                + (date2.getTime() - date1.getTime()) + "毫秒】");
+
+        return map;
+    }
+
 
     public List<String> findByStragegy(StragegyParam stragegyParam) {
         List<Integer> stragegyTypes = stragegyParam.getStragegyType();
@@ -142,7 +204,7 @@ public class StockDailyServiceImpl implements StockDailyService {
      * @return
      */
     private List<StockDaily> findByOneDayVolumeLarge(Date date, Double times, Long minVolume, List<StockDaily> todayStockDailies) {
-        if (todayStockDailies == null || todayStockDailies.size() == 0)return new ArrayList<>();
+        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
         Date lastWeekDay = date;
         //昨天数据
@@ -154,7 +216,7 @@ public class StockDailyServiceImpl implements StockDailyService {
             oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
             i++;
         }
-        if (oldStockDailies == null || oldStockDailies.size() == 0)return new ArrayList<>();
+        if (oldStockDailies == null || oldStockDailies.size() == 0) return new ArrayList<>();
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
         List<StockDaily> rets = new ArrayList<>();
         for (StockDaily todayStockDaily : todayStockDailies) {
@@ -178,7 +240,7 @@ public class StockDailyServiceImpl implements StockDailyService {
      * @return
      */
     private List<StockDaily> findByDaysLowPrice(Date date, Integer days, Double lowTimes, List<StockDaily> todayStockDailies) {
-        if (todayStockDailies == null || todayStockDailies.size() == 0)return new ArrayList<>();
+        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
         //多天前数据
         Date lastWeekDay = getLastWeekDay(date, -days);
@@ -222,7 +284,7 @@ public class StockDailyServiceImpl implements StockDailyService {
                 break;
         }
         try {
-            return DateUtils.formatDate(lastWeekDay, "yyyy-MM-DD");
+            return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
         } catch (ParseException e) {
             e.printStackTrace();
             return new Date();
