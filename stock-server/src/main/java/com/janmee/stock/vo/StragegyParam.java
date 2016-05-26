@@ -1,6 +1,7 @@
 package com.janmee.stock.vo;
 
-import com.seewo.core.util.date.DateUtils;
+
+import com.janmee.stock.utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -39,6 +40,8 @@ public class StragegyParam {
 
     //低于的倍数
     private Double lowTimes;
+
+    private String endDate;
 
     public List<Integer> getStragegyType() {
         return stragegyType;
@@ -86,5 +89,13 @@ public class StragegyParam {
 
     public void setMinVolume(Long minVolume) {
         this.minVolume = minVolume;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 }

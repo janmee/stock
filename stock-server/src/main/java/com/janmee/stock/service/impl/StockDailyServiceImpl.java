@@ -10,7 +10,7 @@ import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.util.bean.BeanUtils;
 import com.seewo.core.util.bean.ObjectUtils;
 import com.seewo.core.util.collection.CollectionUtils;
-import com.seewo.core.util.date.DateUtils;
+import com.janmee.stock.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,16 +130,17 @@ public class StockDailyServiceImpl implements StockDailyService {
         @Override
         public Object call() throws Exception {
             List<String> symbols = findByStragegy(stragegyParam);
-            return new DaySymbolVo(DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE), symbols);
+            String date = DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE);
+            logger.debug(date);
+            return new DaySymbolVo(date, symbols);
         }
     }
 
-    public Map<String, List<String>> scanAllDate(StragegyParam stragegyParam) {
+    public List<DaySymbolVo> scanAllDate(StragegyParam stragegyParam) {
         Date date1 = new Date();
         List<Integer> stragegyTypes = stragegyParam.getStragegyType();
         Date now = stragegyParam.getDate();
-        Date endDate = DateUtils.convertToDate("2014-01-01");
-        Map<String, List<String>> map = new HashMap<>();
+        Date endDate = DateUtils.convertToDate(stragegyParam.getEndDate());
         // 创建一个线程池
         ExecutorService pool = Executors.newFixedThreadPool(10);
         // 创建多个有返回值的任务
@@ -156,14 +157,15 @@ public class StockDailyServiceImpl implements StockDailyService {
         }
         // 关闭线程池
         pool.shutdown();
-
+        List<DaySymbolVo> retList = new ArrayList<>();
         // 获取所有并发任务的运行结果
         for (Future f : list) {
             // 从Future对象上获取任务的返回值，并输出到控制台
+            DaySymbolVo daySymbolVo = null;
             try {
-                DaySymbolVo daySymbolVo = (DaySymbolVo) f.get();
+                daySymbolVo = (DaySymbolVo) f.get();
                 if (daySymbolVo.getSymbols().size() > 0) {
-                    map.put(daySymbolVo.getDate(), daySymbolVo.getSymbols());
+                    retList.add(daySymbolVo);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -175,8 +177,13 @@ public class StockDailyServiceImpl implements StockDailyService {
         Date date2 = new Date();
         System.out.println("----程序结束运行----，程序运行时间【"
                 + (date2.getTime() - date1.getTime()) + "毫秒】");
-
-        return map;
+        Collections.sort(retList, new Comparator<DaySymbolVo>() {
+            @Override
+            public int compare(DaySymbolVo o1, DaySymbolVo o2) {
+                return o2.getDate().compareTo(o1.getDate());
+            }
+        });
+        return retList;
     }
 
 

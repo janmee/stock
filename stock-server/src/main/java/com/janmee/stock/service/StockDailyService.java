@@ -1,6 +1,7 @@
 package com.janmee.stock.service;
 
 import com.janmee.stock.entity.StockDaily;
+import com.janmee.stock.vo.DaySymbolVo;
 import com.janmee.stock.vo.query.StockDailyQuery;
 import com.janmee.stock.vo.StragegyParam;
 import org.springframework.data.domain.Page;
@@ -25,5 +26,5 @@ public interface StockDailyService {
 
     List<String> findByStragegy(StragegyParam stragegyParam);
 
-    public Map<String,List<String>> scanAllDate(StragegyParam stragegyParam);
+    public List<DaySymbolVo> scanAllDate(StragegyParam stragegyParam);
 }
