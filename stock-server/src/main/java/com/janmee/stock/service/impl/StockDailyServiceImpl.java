@@ -4,13 +4,15 @@ import com.janmee.stock.base.utils.MapUtils;
 import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
+import com.janmee.stock.utils.DateUtils;
+import com.janmee.stock.utils.EntityMapUtils;
 import com.janmee.stock.vo.DaySymbolVo;
+import com.janmee.stock.vo.StockProfit;
 import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.util.bean.BeanUtils;
 import com.seewo.core.util.bean.ObjectUtils;
 import com.seewo.core.util.collection.CollectionUtils;
-import com.janmee.stock.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,12 +131,15 @@ public class StockDailyServiceImpl implements StockDailyService {
 
         @Override
         public Object call() throws Exception {
-            List<String> symbols = findByStragegy(stragegyParam);
+            List<StockDaily> stockDailies = runStragegy(stragegyParam);
             String date = DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE);
             logger.debug(date);
-            return new DaySymbolVo(date, symbols);
+            //计算收益
+            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays());
+            return new DaySymbolVo(date, stockProfits);
         }
     }
+
 
     public List<DaySymbolVo> scanAllDate(StragegyParam stragegyParam) {
         Date date1 = new Date();
@@ -164,7 +169,7 @@ public class StockDailyServiceImpl implements StockDailyService {
             DaySymbolVo daySymbolVo = null;
             try {
                 daySymbolVo = (DaySymbolVo) f.get();
-                if (daySymbolVo.getSymbols().size() > 0) {
+                if (daySymbolVo.getStockProfits().size() > 0) {
                     retList.add(daySymbolVo);
                 }
             } catch (InterruptedException e) {
@@ -183,11 +188,38 @@ public class StockDailyServiceImpl implements StockDailyService {
                 return o2.getDate().compareTo(o1.getDate());
             }
         });
+
         return retList;
+    }
+
+    private List<StockProfit> calcProfit(List<StockDaily> stockDailies, Date date, int days) {
+        if (stockDailies != null && stockDailies.size() == 0) return new ArrayList<>();
+        List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
+        Date lastWeekDay = getLastWeekDay(date, days);
+        List<StockDaily> futureDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        Map<String, StockDaily> stockDailyMap = EntityMapUtils.toMap(stockDailies);
+        List<StockProfit> stockProfits = new ArrayList<>();
+        if (futureDailies != null && futureDailies.size() > 0) {
+            StockProfit stockProfit = new StockProfit();
+            for (StockDaily futureDaily : futureDailies) {
+                StockDaily stockDaily = stockDailyMap.get(futureDaily.getStockSymbol());
+                stockProfit.setSymbol(stockDaily.getStockSymbol());
+                if (stockDaily.getCurrent() != 0)
+                    stockProfit.setProfit((futureDaily.getCurrent() - stockDaily.getCurrent()) / stockDaily.getCurrent());
+            }
+            stockProfits.add(stockProfit);
+        }
+        return stockProfits;
     }
 
 
     public List<String> findByStragegy(StragegyParam stragegyParam) {
+        List<StockDaily> stockDailies = runStragegy(stragegyParam);
+        List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
+        return symbols;
+    }
+
+    private List<StockDaily> runStragegy(StragegyParam stragegyParam) {
         List<Integer> stragegyTypes = stragegyParam.getStragegyType();
         Date now = stragegyParam.getDate();
         //今天数据
@@ -201,8 +233,7 @@ public class StockDailyServiceImpl implements StockDailyService {
                 }
             }
         }
-        List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
-        return symbols;
+        return stockDailies;
     }
 
     /**

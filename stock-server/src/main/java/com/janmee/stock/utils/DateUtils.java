@@ -18,7 +18,6 @@ public class DateUtils extends org.apache.commons.lang.time.DateUtils {
     public static final String PATTREN_TIME = "HH:mm:ss";
     public static final String PATTREN_DATE_TIME = "yyyy-MM-dd HH:mm:ss";
     public static final String PATTREN_DATE_TIME2 = "yyyy-MM-dd HH:mm";
-    public static DateFormat DATE_FORMAT;
     public static DateFormat DATE_FORMAT_CN;
     public static DateFormat DATE_PATH_FORMAT;
     public static DateFormat TIME_FORMAT;
@@ -50,7 +49,7 @@ public class DateUtils extends org.apache.commons.lang.time.DateUtils {
 
     public static Date convertToDate(String dateString) {
         try {
-            DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
+            DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
             return DATE_FORMAT.parse(dateString);
         } catch (ParseException var2) {
             return null;
@@ -311,7 +310,7 @@ public class DateUtils extends org.apache.commons.lang.time.DateUtils {
     }
 
     public static long getDateDiffNum(String d1, String d2) throws ParseException {
-        DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
+        DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
         return getDateDiffNum((Date)DATE_FORMAT.parse(d1), (Date)DATE_FORMAT.parse(d2));
     }
 
@@ -372,7 +371,7 @@ public class DateUtils extends org.apache.commons.lang.time.DateUtils {
         calendar.setTime(date);
         int year = calendar.get(1);
         int dayOfYear = calendar.get(6);
-        TIME_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.CHINA);
+        DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.CHINA);
         return year == currentYear && currentDayOfYear == dayOfYear?"今天 " + TIME_FORMAT.format(date):DATE_TIME_FORMAT.format(date);
     }
 

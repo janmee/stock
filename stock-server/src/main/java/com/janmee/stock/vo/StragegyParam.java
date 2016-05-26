@@ -43,6 +43,8 @@ public class StragegyParam {
 
     private String endDate;
 
+    private Integer profitDays;
+
     public List<Integer> getStragegyType() {
         return stragegyType;
     }
@@ -97,5 +99,13 @@ public class StragegyParam {
 
     public void setEndDate(String endDate) {
         this.endDate = endDate;
+    }
+
+    public Integer getProfitDays() {
+        return profitDays;
+    }
+
+    public void setProfitDays(Integer profitDays) {
+        this.profitDays = profitDays;
     }
 }

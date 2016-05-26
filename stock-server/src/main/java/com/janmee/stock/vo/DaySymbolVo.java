@@ -8,11 +8,11 @@ import java.util.List;
  */
 public class DaySymbolVo {
     private String date;
-    private List<String> symbols;
+    private List<StockProfit> stockProfits;
 
-    public DaySymbolVo(String date, List<String> symbols) {
+    public DaySymbolVo(String date, List<StockProfit> stockProfits) {
         this.date = date;
-        this.symbols = symbols;
+        this.stockProfits = stockProfits;
     }
 
     public String getDate() {
@@ -23,11 +23,11 @@ public class DaySymbolVo {
         this.date = date;
     }
 
-    public List<String> getSymbols() {
-        return symbols;
+    public List<StockProfit> getStockProfits() {
+        return stockProfits;
     }
 
-    public void setSymbols(List<String> symbols) {
-        this.symbols = symbols;
+    public void setStockProfits(List<StockProfit> stockProfits) {
+        this.stockProfits = stockProfits;
     }
 }
