@@ -164,13 +164,19 @@ public class StockDailyServiceImpl implements StockDailyService {
         pool.shutdown();
         List<DaySymbolVo> retList = new ArrayList<>();
         // 获取所有并发任务的运行结果
+        int i = 0;
         for (Future f : list) {
             // 从Future对象上获取任务的返回值，并输出到控制台
             DaySymbolVo daySymbolVo = null;
             try {
+                i++;
                 daySymbolVo = (DaySymbolVo) f.get();
                 if (daySymbolVo.getStockProfits().size() > 0) {
                     retList.add(daySymbolVo);
+                }
+                if (i % 100 == 0) {
+                    System.runFinalization();
+                    System.gc();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -178,9 +184,10 @@ public class StockDailyServiceImpl implements StockDailyService {
                 e.printStackTrace();
             }
         }
+        pool.shutdown();
 
         Date date2 = new Date();
-        System.out.println("----程序结束运行----，程序运行时间【"
+        logger.info("----程序结束运行----，" + i + "个线程运行时间【"
                 + (date2.getTime() - date1.getTime()) + "毫秒】");
         Collections.sort(retList, new Comparator<DaySymbolVo>() {
             @Override
@@ -188,7 +195,6 @@ public class StockDailyServiceImpl implements StockDailyService {
                 return o2.getDate().compareTo(o1.getDate());
             }
         });
-
         return retList;
     }
 
@@ -206,6 +212,11 @@ public class StockDailyServiceImpl implements StockDailyService {
                 stockProfit.setSymbol(stockDaily.getStockSymbol());
                 if (stockDaily.getCurrent() != 0)
                     stockProfit.setProfit((futureDaily.getCurrent() - stockDaily.getCurrent()) / stockDaily.getCurrent());
+                if (stockProfit.getProfit() > 0) {
+                    gainCount++;
+                } else {
+                    lossCount++;
+                }
             }
             stockProfits.add(stockProfit);
         }

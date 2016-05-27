@@ -6,7 +6,7 @@ package com.janmee.stock.vo;
  */
 public class StockProfit {
     private String symbol;
-    private double profit;
+    private double profit = 0;
 
     public String getSymbol() {
         return symbol;

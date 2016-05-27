@@ -27,4 +27,5 @@ public interface StockDailyService {
     List<String> findByStragegy(StragegyParam stragegyParam);
 
     public List<DaySymbolVo> scanAllDate(StragegyParam stragegyParam);
+
 }
