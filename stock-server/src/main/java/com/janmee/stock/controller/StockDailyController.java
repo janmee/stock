@@ -93,10 +93,7 @@ public class StockDailyController {
      */
     @RequestMapping(value = "/scan")
     public DataMap scan(StragegyParam stragegyParam, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
-                .addAttribute(Constants.DATA, stockDailyService.scanAllDate(stragegyParam))
-                .addAttribute("profitCount",stockDailyService.getGainCount())
-                .addAttribute("lossCount",stockDailyService.getLossCount());
+        return stockDailyService.scanAllDate(stragegyParam);
     }
 
 }

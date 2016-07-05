@@ -1,5 +1,6 @@
 package com.janmee.stock.service.impl;
 
+import com.janmee.stock.base.StatusCode;
 import com.janmee.stock.base.utils.MapUtils;
 import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
@@ -10,6 +11,8 @@ import com.janmee.stock.vo.DaySymbolVo;
 import com.janmee.stock.vo.StockProfit;
 import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
+import com.seewo.core.base.Constants;
+import com.seewo.core.base.DataMap;
 import com.seewo.core.util.bean.BeanUtils;
 import com.seewo.core.util.bean.ObjectUtils;
 import com.seewo.core.util.collection.CollectionUtils;
@@ -26,6 +29,7 @@ import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Transactional
@@ -124,9 +128,13 @@ public class StockDailyServiceImpl implements StockDailyService {
 
     class MyCallable implements Callable<Object> {
         private StragegyParam stragegyParam;
+        private AtomicInteger gainCount;
+        private AtomicInteger lossCount;
 
-        MyCallable(StragegyParam stragegyParam) {
+        MyCallable(StragegyParam stragegyParam, AtomicInteger gainCount, AtomicInteger lossCount) {
             this.stragegyParam = stragegyParam;
+            this.gainCount = gainCount;
+            this.lossCount = lossCount;
         }
 
         @Override
@@ -135,13 +143,13 @@ public class StockDailyServiceImpl implements StockDailyService {
             String date = DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE);
             logger.debug(date);
             //计算收益
-            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays());
+            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays(),gainCount,lossCount);
             return new DaySymbolVo(date, stockProfits);
         }
     }
 
 
-    public List<DaySymbolVo> scanAllDate(StragegyParam stragegyParam) {
+    public DataMap scanAllDate(StragegyParam stragegyParam) {
         Date date1 = new Date();
         List<Integer> stragegyTypes = stragegyParam.getStragegyType();
         Date now = stragegyParam.getDate();
@@ -150,11 +158,13 @@ public class StockDailyServiceImpl implements StockDailyService {
         ExecutorService pool = Executors.newFixedThreadPool(10);
         // 创建多个有返回值的任务
         List<Future> list = new ArrayList<Future>();
+        AtomicInteger gainCount = new AtomicInteger(0);
+        AtomicInteger lossCount = new AtomicInteger(0);
         for (now = getLastWeekDay(now, 0); now.compareTo(endDate) >= 0; now = getLastWeekDay(now, -1)) {
             StragegyParam newParam = new StragegyParam();
             BeanUtils.copyProperties(stragegyParam, newParam);
             newParam.setDate(DateUtils.formatDateStr(now, DateUtils.PATTREN_DATE));
-            Callable c = new MyCallable(newParam);
+            Callable c = new MyCallable(newParam, gainCount, lossCount);
             // 执行任务并获取Future对象
             Future f = pool.submit(c);
             // System.out.println(">>>" + f.get().toString());
@@ -174,17 +184,17 @@ public class StockDailyServiceImpl implements StockDailyService {
                 if (daySymbolVo.getStockProfits().size() > 0) {
                     retList.add(daySymbolVo);
                 }
-                if (i % 100 == 0) {
-                    System.runFinalization();
-                    System.gc();
-                }
+//                if (i % 100 == 0) {
+//                    System.runFinalization();
+//                    System.gc();
+//                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         }
-        pool.shutdown();
+        pool.shutdownNow();
 
         Date date2 = new Date();
         logger.info("----程序结束运行----，" + i + "个线程运行时间【"
@@ -195,10 +205,15 @@ public class StockDailyServiceImpl implements StockDailyService {
                 return o2.getDate().compareTo(o1.getDate());
             }
         });
-        return retList;
+        DataMap dataMap = new DataMap();
+        dataMap.addAttribute(Constants.DATA,retList);
+        dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
+        dataMap.addAttribute("profitCount",gainCount.intValue());
+        dataMap.addAttribute("lossCount",lossCount.intValue());
+        return dataMap;
     }
 
-    private List<StockProfit> calcProfit(List<StockDaily> stockDailies, Date date, int days) {
+    private List<StockProfit> calcProfit(List<StockDaily> stockDailies, Date date, int days, AtomicInteger gainCount, AtomicInteger lossCount) {
         if (stockDailies != null && stockDailies.size() == 0) return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
         Date lastWeekDay = getLastWeekDay(date, days);
@@ -213,9 +228,9 @@ public class StockDailyServiceImpl implements StockDailyService {
                 if (stockDaily.getCurrent() != 0)
                     stockProfit.setProfit((futureDaily.getCurrent() - stockDaily.getCurrent()) / stockDaily.getCurrent());
                 if (stockProfit.getProfit() > 0) {
-                    gainCount++;
+                    gainCount.incrementAndGet();
                 } else {
-                    lossCount++;
+                    lossCount.incrementAndGet();
                 }
             }
             stockProfits.add(stockProfit);
