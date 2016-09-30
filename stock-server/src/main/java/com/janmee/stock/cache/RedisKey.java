@@ -9,5 +9,7 @@ import com.janmee.stock.base.Constants;
  * @version 1.0
  */
 public class RedisKey {
-    public static final String KEY_COMMENT_FRONT = Constants.REDIS_PREFIX + "_Front_Comment";
+    public static final String KEY_BASE = Constants.REDIS_PREFIX;
+
+    public static final String KEY_DAILY_SYMBOL = Constants.REDIS_PREFIX + ":daily:%s";
 }

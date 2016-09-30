@@ -28,6 +28,9 @@
 
     <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
 
+    <!-- Redis缓存的初始化监听器 -->
+    <bean class="com.janmee.stock.listener.RedisCacheInitListener"/>
+
     <!-- 根据客户端的不同的请求决定不同的view进行响应, 如 /blog/1.json /blog/1.xml -->
     <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
     	<property name="ignoreAcceptHeader" value="true"/>

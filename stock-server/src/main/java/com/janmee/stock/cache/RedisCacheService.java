@@ -15,6 +15,8 @@ public interface RedisCacheService {
 
     Object hget(Serializable key, Serializable field);
 
+    List<Object> hget(Serializable key, List<Object> fields);
+
     void hdel(Serializable key);
 
     <T> T hget(Serializable key, Class<? extends T> clazz);
@@ -127,4 +129,6 @@ public interface RedisCacheService {
     void deleteKeyWithPattern(Serializable pattern);
 
     boolean hasKey(Serializable key);
+
+    RedisLock getLock(String key);
 }

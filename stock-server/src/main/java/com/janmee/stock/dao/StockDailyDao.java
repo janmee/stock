@@ -12,5 +12,5 @@ public interface StockDailyDao extends BaseJpaRepository<StockDaily, String>, Jp
 
     public List<StockDaily> findByDateAndStockSymbolIn(Date date, List<String> symbols);
 
-    public List<StockDaily> findByDateBetween(Date startDate, Date endDate);
+    public List<StockDaily> findByDateBetweenOrderByDateDesc(Date startDate, Date endDate);
 }

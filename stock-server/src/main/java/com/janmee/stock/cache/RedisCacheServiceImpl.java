@@ -101,6 +101,21 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         return o;
     }
 
+    @Override
+    public List<Object> hget(Serializable tableKey, List<Object> fields) {
+        if (!flag) {
+            return null;
+        }
+        List<Object> o = null;
+        try {
+            o = redisTemplate.boundHashOps(tableKey).multiGet(fields);
+        } catch (Exception e) {
+            deleteKey(tableKey);
+            logger.error("get redis error,reflush key : {}", tableKey);
+        }
+        return o;
+    }
+
     /**
      * 测试哈希表中field是否存在
      */
@@ -493,6 +508,15 @@ public class RedisCacheServiceImpl implements RedisCacheService {
             return false;
         }
         return redisTemplate.hasKey(key);
+    }
+
+    public RedisLock getLock(String key) {
+        if (!flag) {
+            return null;
+        }
+        //锁过期时间20秒，等待锁时间10秒
+        RedisLock lock = new RedisLock(redisTemplate, key, 10000, 20000);
+        return lock;
     }
 
 }

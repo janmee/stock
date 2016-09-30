@@ -2,6 +2,9 @@ package com.janmee.stock.service.impl;
 
 import com.janmee.stock.base.StatusCode;
 import com.janmee.stock.base.utils.MapUtils;
+import com.janmee.stock.cache.RedisCacheService;
+import com.janmee.stock.cache.RedisKey;
+import com.janmee.stock.cache.RedisLock;
 import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.StockDailyService;
@@ -42,6 +45,9 @@ public class StockDailyServiceImpl implements StockDailyService {
 
     @Autowired
     private StockDailyDao stockDailyDao;
+
+    @Autowired
+    private RedisCacheService redisCacheService;
 
     @Override
     public Page<StockDaily> findAll(Pageable pageable) {
@@ -143,7 +149,7 @@ public class StockDailyServiceImpl implements StockDailyService {
             String date = DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE);
             logger.debug(date);
             //计算收益
-            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays(),gainCount,lossCount);
+            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays(), gainCount, lossCount);
             return new DaySymbolVo(date, stockProfits);
         }
     }
@@ -206,10 +212,10 @@ public class StockDailyServiceImpl implements StockDailyService {
             }
         });
         DataMap dataMap = new DataMap();
-        dataMap.addAttribute(Constants.DATA,retList);
+        dataMap.addAttribute(Constants.DATA, retList);
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
-        dataMap.addAttribute("profitCount",gainCount.intValue());
-        dataMap.addAttribute("lossCount",lossCount.intValue());
+        dataMap.addAttribute("profitCount", gainCount.intValue());
+        dataMap.addAttribute("lossCount", lossCount.intValue());
         return dataMap;
     }
 
@@ -217,12 +223,14 @@ public class StockDailyServiceImpl implements StockDailyService {
         if (stockDailies != null && stockDailies.size() == 0) return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
         Date lastWeekDay = getLastWeekDay(date, days);
+//        List<StockDaily> futureDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
         List<StockDaily> futureDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
         Map<String, StockDaily> stockDailyMap = EntityMapUtils.toMap(stockDailies);
         List<StockProfit> stockProfits = new ArrayList<>();
         if (futureDailies != null && futureDailies.size() > 0) {
             StockProfit stockProfit = new StockProfit();
             for (StockDaily futureDaily : futureDailies) {
+                if (futureDaily == null)continue;
                 StockDaily stockDaily = stockDailyMap.get(futureDaily.getStockSymbol());
                 stockProfit.setSymbol(stockDaily.getStockSymbol());
                 if (stockDaily.getCurrent() != 0)
@@ -278,6 +286,7 @@ public class StockDailyServiceImpl implements StockDailyService {
             lastWeekDay = getLastWeekDay(lastWeekDay, -1);
             //上一交易日数据
             oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
             i++;
         }
         if (oldStockDailies == null || oldStockDailies.size() == 0) return new ArrayList<>();
@@ -308,11 +317,13 @@ public class StockDailyServiceImpl implements StockDailyService {
         List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
         //多天前数据
         Date lastWeekDay = getLastWeekDay(date, -days);
+//        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
         List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
         while (oldStockDailies == null || oldStockDailies.size() == 0) {
             lastWeekDay = getLastWeekDay(lastWeekDay, -1);
             //上一交易日数据
             oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
         }
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
         List<StockDaily> rets = new ArrayList<>();
@@ -324,6 +335,66 @@ public class StockDailyServiceImpl implements StockDailyService {
             }
         }
         return rets;
+    }
+
+    private List<StockDaily> findByDateAndStockSymbolInFromCache(Date date, List<String> symbols) {
+        String dateStr = DateUtils.formatDateStr(date, DateUtils.PATTREN_DATE);
+        String key = String.format(RedisKey.KEY_DAILY_SYMBOL, dateStr);
+        List<StockDaily> stockDailies = null;
+        if (redisCacheService.hasKey(key)) {
+            stockDailies = (List<StockDaily>) (List<?>) redisCacheService.hget(key, (List<Object>) (List<?>) symbols);
+        }
+        if (CollectionUtils.isEmpty(stockDailies)) {
+            RedisLock lock = redisCacheService.getLock(RedisKey.KEY_BASE + ":daily");
+            try {
+                if (lock.acquire()) {
+                    if (redisCacheService.hasKey(key)) {
+                        stockDailies = (List<StockDaily>) (List<?>) redisCacheService.hget(key, (List<Object>) (List<?>) symbols);
+                    }
+                    if (CollectionUtils.isEmpty(stockDailies)) {
+                        //查找今天到前30天记录
+                        Date lastWeekDay = getLastWeekDay(date, -200);
+                        List<StockDaily> stockDailyList = stockDailyDao.findByDateBetweenOrderByDateDesc(lastWeekDay, date);
+                        Map<String, Map<String, StockDaily>> map = toStockDailyMap(stockDailyList);
+                        Set<Map.Entry<String, Map<String, StockDaily>>> entrySets = map.entrySet();
+                        for (Map.Entry<String, Map<String, StockDaily>> entry : entrySets) {
+                            redisCacheService.hput(String.format(RedisKey.KEY_DAILY_SYMBOL, entry.getKey()), (Map<String, Object>) (Map<String, ?>) entry.getValue());
+                        }
+                        stockDailies = (List<StockDaily>) (List<?>) redisCacheService.hget(key, (List<Object>) (List<?>) symbols);
+                    }
+
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                lock.release();
+            }
+        }
+        return stockDailies;
+
+
+    }
+
+    /**
+     * 按照日期进行转换成map
+     *
+     * @return
+     */
+    private Map<String, Map<String, StockDaily>> toStockDailyMap(List<StockDaily> stockDailyList) {
+        Map<String, Map<String, StockDaily>> map = new HashMap();
+        Map<String, StockDaily> stockMap;
+        String date;
+        for (StockDaily stockDaily : stockDailyList) {
+            date = DateUtils.formatDateStr(stockDaily.getDate(), DateUtils.PATTREN_DATE);
+            if (!map.containsKey(date)) {
+                stockMap = new HashMap();
+            } else {
+                stockMap = map.get(date);
+            }
+            stockMap.put(stockDaily.getStockSymbol(), stockDaily);
+            map.put(date, stockMap);
+        }
+        return map;
     }
 
 

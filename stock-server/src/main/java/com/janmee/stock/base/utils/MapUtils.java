@@ -12,14 +12,15 @@ import java.util.Map;
  */
 public class MapUtils {
     /**
-     *
      * @param stockDailies
      * @return Map<symbol,StockDaily>
      */
-    public static Map<String,StockDaily> stockDailyToMap(List<StockDaily>stockDailies){
-        Map<String,StockDaily> map = new HashMap<>();
-        for (StockDaily stockDaily : stockDailies){
-            map.put(stockDaily.getStockSymbol(),stockDaily);
+    public static Map<String, StockDaily> stockDailyToMap(List<StockDaily> stockDailies) {
+        Map<String, StockDaily> map = new HashMap<>();
+        for (StockDaily stockDaily : stockDailies) {
+            if (stockDaily != null) {
+                map.put(stockDaily.getStockSymbol(), stockDaily);
+            }
         }
         return map;
     }
