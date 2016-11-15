@@ -11,6 +11,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -95,6 +96,18 @@ public class StockDailyService {
             session.close();
         }
         return stocks;
+    }
+
+    /**
+     * 获取最后一个更新日期
+     */
+    public Date selectLastestDay(String symbol) {
+        SqlSession session = sqlSessionFactory.openSession();
+        StockDailyDao stockDailyDao = session.getMapper(StockDailyDao.class);
+        Date date = null;
+        date = stockDailyDao.selectLastestDay(symbol);
+        session.close();
+        return date;
     }
 
 

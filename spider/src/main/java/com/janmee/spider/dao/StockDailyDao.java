@@ -3,7 +3,7 @@ package com.janmee.spider.dao;
 import com.janmee.spider.entity.StockDaily;
 
 import java.util.List;
-import org.apache.ibatis.annotations.Param;
+import java.util.Date;
 
 public interface StockDailyDao {
 
@@ -57,4 +57,6 @@ public interface StockDailyDao {
      * @mbggenerated Sun Apr 24 14:35:10 CST 2016
      */
     int updateByPrimaryKey(StockDaily record);
+
+    Date selectLastestDay(String symbol);
 }

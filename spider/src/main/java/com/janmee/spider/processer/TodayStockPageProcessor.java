@@ -13,11 +13,13 @@ import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
 
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 上一个交易日数据
  * @author luojianming on 2016/4/22.
  * @version 1.0
  */
@@ -34,7 +36,7 @@ public class TodayStockPageProcessor implements PageProcessor {
         Pattern pattern = Pattern.compile("data:(.*)}\\)\\)");
         String rawText = page.getRawText();
         Matcher matcher = pattern.matcher(rawText);
-        Date lastDay = DateUtils.addDays(new Date(), -1);
+        Date lastDay = getLastWeekDay(new Date(), -1);
         if (matcher.find()) {
             String jsonStr = matcher.group(1);
             System.out.println("json:" + jsonStr);
@@ -77,5 +79,33 @@ public class TodayStockPageProcessor implements PageProcessor {
             request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=60";
         }
         Spider.create(new TodayStockPageProcessor()).addUrl(request).thread(5).run();
+    }
+
+    /**
+     * 获取上一个交易日
+     *
+     * @return
+     */
+    private Date getLastWeekDay(Date date, int last) {
+        Date lastWeekDay = DateUtils.addDays(date, last);
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(lastWeekDay);
+        int w = cal.get(Calendar.DAY_OF_WEEK);
+        switch (w) {
+            case 7:
+                lastWeekDay = DateUtils.addDays(lastWeekDay, -1);
+                break;
+            case 1:
+                lastWeekDay = DateUtils.addDays(lastWeekDay, -2);
+                break;
+            default:
+                break;
+        }
+        try {
+            return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return new Date();
+        }
     }
 }

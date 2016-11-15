@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 获取全部股票代码
  * @author luojianming on 2016/4/22.
  * @version 1.0
  */

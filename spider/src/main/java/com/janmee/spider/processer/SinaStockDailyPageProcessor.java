@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 获取stock表中代码的每天数据
  * @author luojianming on 2016/4/22.
  * @version 1.0
  */
