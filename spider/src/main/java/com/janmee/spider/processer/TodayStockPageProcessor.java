@@ -41,6 +41,7 @@ public class TodayStockPageProcessor implements PageProcessor {
             String jsonStr = matcher.group(1);
             System.out.println("json:" + jsonStr);
             List<StockDay> stockDays = JSONArray.parseArray(jsonStr, StockDay.class);
+            if (stockDays == null)return;
             List<StockDaily> stockDailies = new ArrayList<StockDaily>();
             for (StockDay stockDay : stockDays) {
                 Stock stock = new Stock();
