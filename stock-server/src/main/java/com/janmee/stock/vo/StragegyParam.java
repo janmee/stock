@@ -13,7 +13,9 @@ import java.util.List;
 public class StragegyParam {
     public static enum Type {
         OneDayVolumeLarge(1, "当天成交量放大"),
-        DaysLowPrice(2, "多天低价");
+        DaysLowPrice(2, "多天低价"),
+        LowlineRate(3,"低价并长下影线")
+        ;
         private int type;
         private String desc;
 
@@ -44,6 +46,8 @@ public class StragegyParam {
     private String endDate;
 
     private Integer profitDays;
+
+    private Double lowlineRate;
 
     public List<Integer> getStragegyType() {
         return stragegyType;
@@ -107,5 +111,13 @@ public class StragegyParam {
 
     public void setProfitDays(Integer profitDays) {
         this.profitDays = profitDays;
+    }
+
+    public Double getLowlineRate() {
+        return lowlineRate;
+    }
+
+    public void setLowlineRate(Double lowlineRate) {
+        this.lowlineRate = lowlineRate;
     }
 }

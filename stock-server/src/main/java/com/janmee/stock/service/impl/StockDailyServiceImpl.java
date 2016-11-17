@@ -230,7 +230,7 @@ public class StockDailyServiceImpl implements StockDailyService {
         if (futureDailies != null && futureDailies.size() > 0) {
             StockProfit stockProfit = new StockProfit();
             for (StockDaily futureDaily : futureDailies) {
-                if (futureDaily == null)continue;
+                if (futureDaily == null) continue;
                 StockDaily stockDaily = stockDailyMap.get(futureDaily.getStockSymbol());
                 stockProfit.setSymbol(stockDaily.getStockSymbol());
                 if (stockDaily.getCurrent() != 0)
@@ -264,6 +264,8 @@ public class StockDailyServiceImpl implements StockDailyService {
                     stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
                 } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
                     stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
+                }else if(type == StragegyParam.Type.LowlineRate.getType()){
+                    stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(),stockDailies);
                 }
             }
         }
@@ -271,6 +273,7 @@ public class StockDailyServiceImpl implements StockDailyService {
     }
 
     /**
+     * 策略1
      * 根据当天成交量放大查找
      *
      * @return
@@ -307,6 +310,7 @@ public class StockDailyServiceImpl implements StockDailyService {
     }
 
     /**
+     * 策略2
      * 根据多天低价查找
      *
      * @param todayStockDailies
@@ -330,7 +334,48 @@ public class StockDailyServiceImpl implements StockDailyService {
         for (StockDaily todayStockDaily : todayStockDailies) {
             if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
                 StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
-                if (todayStockDaily.getCurrent() != 0 && todayStockDaily.getCurrent() < lowTimes * oldStockDaily.getCurrent())
+                if (todayStockDaily.getCurrent() != 0
+                        && todayStockDaily.getCurrent() < lowTimes * oldStockDaily.getCurrent() //今天比前N天低lowTimes倍
+                        )
+                    rets.add(todayStockDaily);
+            }
+        }
+        return rets;
+    }
+
+    /**
+     * 策略3
+     * 当天价格比昨天低，且当天出现长下影线
+     *
+     * @param date              当天日期
+     * @param lowlineRate       下影线，最低价比开盘价低多少，比率
+     * @param todayStockDailies 当天数据
+     * @return
+     */
+    private List<StockDaily> findByLongLowLine(Date date, Double lowlineRate, List<StockDaily> todayStockDailies) {
+        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
+        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
+        //上一个交易日数据
+        Date lastWeekDay = getLastWeekDay(date, -1);
+//        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
+        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
+            //上一交易日数据
+            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
+        }
+        Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
+        List<StockDaily> rets = new ArrayList<>();
+        double rate = 1-lowlineRate;
+        for (StockDaily todayStockDaily : todayStockDailies) {
+            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
+                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
+                if (todayStockDaily.getCurrent() != 0
+                        && todayStockDaily.getCurrent() < oldStockDaily.getCurrent() //今天比上一交易日低
+                        && (todayStockDaily.getOpen() * rate >= todayStockDaily.getLow() //下影线
+                            ||todayStockDaily.getCurrent() * rate >= todayStockDaily.getLow())
+                        )
                     rets.add(todayStockDaily);
             }
         }
