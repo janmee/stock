@@ -11,6 +11,7 @@ import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.utils.DateUtils;
 import com.janmee.stock.utils.EntityMapUtils;
 import com.janmee.stock.vo.DaySymbolVo;
+import com.janmee.stock.vo.ProfitCount;
 import com.janmee.stock.vo.StockProfit;
 import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
@@ -32,7 +33,6 @@ import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Transactional
@@ -134,13 +134,11 @@ public class StockDailyServiceImpl implements StockDailyService {
 
     class MyCallable implements Callable<Object> {
         private StragegyParam stragegyParam;
-        private AtomicInteger gainCount;
-        private AtomicInteger lossCount;
+        private ProfitCount profitCount;
 
-        MyCallable(StragegyParam stragegyParam, AtomicInteger gainCount, AtomicInteger lossCount) {
+        MyCallable(StragegyParam stragegyParam, ProfitCount profitCount) {
             this.stragegyParam = stragegyParam;
-            this.gainCount = gainCount;
-            this.lossCount = lossCount;
+            this.profitCount = profitCount;
         }
 
         @Override
@@ -149,7 +147,7 @@ public class StockDailyServiceImpl implements StockDailyService {
             String date = DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE);
             logger.debug(date);
             //计算收益
-            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getDays(), gainCount, lossCount);
+            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getProfitDays(), profitCount);
             return new DaySymbolVo(date, stockProfits);
         }
     }
@@ -164,13 +162,13 @@ public class StockDailyServiceImpl implements StockDailyService {
         ExecutorService pool = Executors.newFixedThreadPool(10);
         // 创建多个有返回值的任务
         List<Future> list = new ArrayList<Future>();
-        AtomicInteger gainCount = new AtomicInteger(0);
-        AtomicInteger lossCount = new AtomicInteger(0);
+        ProfitCount profitCount = new ProfitCount();
+        //每天一个线程
         for (now = getLastWeekDay(now, 0); now.compareTo(endDate) >= 0; now = getLastWeekDay(now, -1)) {
             StragegyParam newParam = new StragegyParam();
             BeanUtils.copyProperties(stragegyParam, newParam);
             newParam.setDate(DateUtils.formatDateStr(now, DateUtils.PATTREN_DATE));
-            Callable c = new MyCallable(newParam, gainCount, lossCount);
+            Callable c = new MyCallable(newParam, profitCount);
             // 执行任务并获取Future对象
             Future f = pool.submit(c);
             // System.out.println(">>>" + f.get().toString());
@@ -181,6 +179,7 @@ public class StockDailyServiceImpl implements StockDailyService {
         List<DaySymbolVo> retList = new ArrayList<>();
         // 获取所有并发任务的运行结果
         int i = 0;
+        int total = 0;
         for (Future f : list) {
             // 从Future对象上获取任务的返回值，并输出到控制台
             DaySymbolVo daySymbolVo = null;
@@ -189,6 +188,7 @@ public class StockDailyServiceImpl implements StockDailyService {
                 daySymbolVo = (DaySymbolVo) f.get();
                 if (daySymbolVo.getStockProfits().size() > 0) {
                     retList.add(daySymbolVo);
+                    total += daySymbolVo.getStockProfits().size();
                 }
 //                if (i % 100 == 0) {
 //                    System.runFinalization();
@@ -214,34 +214,44 @@ public class StockDailyServiceImpl implements StockDailyService {
         DataMap dataMap = new DataMap();
         dataMap.addAttribute(Constants.DATA, retList);
         dataMap.addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode());
-        dataMap.addAttribute("profitCount", gainCount.intValue());
-        dataMap.addAttribute("lossCount", lossCount.intValue());
+        dataMap.addAttribute("total", total);
+        dataMap.addAttribute("profitCount", profitCount.getGainCount().intValue());
+        dataMap.addAttribute("lossCount", profitCount.getLossCount().intValue());
         return dataMap;
     }
 
-    private List<StockProfit> calcProfit(List<StockDaily> stockDailies, Date date, int days, AtomicInteger gainCount, AtomicInteger lossCount) {
+    /**
+     * 计算收益
+     *
+     * @param stockDailies 每日股价
+     * @param date         当前日期
+     * @param days         多少天后
+     * @param profitCount  收益数
+     * @return
+     */
+    private List<StockProfit> calcProfit(List<StockDaily> stockDailies, Date date, int days, ProfitCount profitCount) {
         if (stockDailies != null && stockDailies.size() == 0) return new ArrayList<>();
         List<String> symbols = CollectionUtils.getPropertyList(stockDailies, "stockSymbol");
         Date lastWeekDay = getLastWeekDay(date, days);
 //        List<StockDaily> futureDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        List<StockDaily> futureDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        List<StockDaily> futureDailies = loopFindByDateAndStockSymbolIn(lastWeekDay, symbols);
         Map<String, StockDaily> stockDailyMap = EntityMapUtils.toMap(stockDailies);
         List<StockProfit> stockProfits = new ArrayList<>();
         if (futureDailies != null && futureDailies.size() > 0) {
-            StockProfit stockProfit = new StockProfit();
             for (StockDaily futureDaily : futureDailies) {
+                StockProfit stockProfit = new StockProfit();
                 if (futureDaily == null) continue;
                 StockDaily stockDaily = stockDailyMap.get(futureDaily.getStockSymbol());
                 stockProfit.setSymbol(stockDaily.getStockSymbol());
                 if (stockDaily.getCurrent() != 0)
                     stockProfit.setProfit((futureDaily.getCurrent() - stockDaily.getCurrent()) / stockDaily.getCurrent());
-                if (stockProfit.getProfit() > 0) {
-                    gainCount.incrementAndGet();
-                } else {
-                    lossCount.incrementAndGet();
+                if (stockProfit.getProfit() >= 0) {
+                    profitCount.getGainCount().incrementAndGet();
+                } else if (stockProfit.getProfit() < 0) {
+                    profitCount.getLossCount().incrementAndGet();
                 }
+                stockProfits.add(stockProfit);
             }
-            stockProfits.add(stockProfit);
         }
         return stockProfits;
     }
@@ -264,8 +274,8 @@ public class StockDailyServiceImpl implements StockDailyService {
                     stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
                 } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
                     stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
-                }else if(type == StragegyParam.Type.LowlineRate.getType()){
-                    stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(),stockDailies);
+                } else if (type == StragegyParam.Type.LowlineRate.getType()) {
+                    stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(), stockDailies);
                 }
             }
         }
@@ -322,13 +332,7 @@ public class StockDailyServiceImpl implements StockDailyService {
         //多天前数据
         Date lastWeekDay = getLastWeekDay(date, -days);
 //        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
-        while (oldStockDailies == null || oldStockDailies.size() == 0) {
-            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
-            //上一交易日数据
-            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
-//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        }
+        List<StockDaily> oldStockDailies = loopFindByDateAndStockSymbolIn(lastWeekDay, symbols);
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
         List<StockDaily> rets = new ArrayList<>();
         for (StockDaily todayStockDaily : todayStockDailies) {
@@ -358,23 +362,17 @@ public class StockDailyServiceImpl implements StockDailyService {
         //上一个交易日数据
         Date lastWeekDay = getLastWeekDay(date, -1);
 //        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
-        while (oldStockDailies == null || oldStockDailies.size() == 0) {
-            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
-            //上一交易日数据
-            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
-//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        }
+        List<StockDaily> oldStockDailies = loopFindByDateAndStockSymbolIn(lastWeekDay, symbols);
         Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
         List<StockDaily> rets = new ArrayList<>();
-        double rate = 1-lowlineRate;
+        double rate = 1 - lowlineRate;
         for (StockDaily todayStockDaily : todayStockDailies) {
             if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
                 StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
                 if (todayStockDaily.getCurrent() != 0
                         && todayStockDaily.getCurrent() < oldStockDaily.getCurrent() //今天比上一交易日低
                         && (todayStockDaily.getOpen() * rate >= todayStockDaily.getLow() //下影线
-                            ||todayStockDaily.getCurrent() * rate >= todayStockDaily.getLow())
+                        || todayStockDaily.getCurrent() * rate >= todayStockDaily.getLow())
                         )
                     rets.add(todayStockDaily);
             }
@@ -440,6 +438,21 @@ public class StockDailyServiceImpl implements StockDailyService {
             map.put(date, stockMap);
         }
         return map;
+    }
+
+    /**
+     * 获取日期的交易日数据
+     */
+    public List<StockDaily> loopFindByDateAndStockSymbolIn(Date date, List<String> symbols) {
+        Date lastWeekDay = date;
+        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
+            //上一交易日数据
+            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
+//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
+        }
+        return oldStockDailies;
     }
 
 
