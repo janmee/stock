@@ -96,4 +96,9 @@ public class StockDailyController {
         return stockDailyService.scanAllDate(stragegyParam);
     }
 
+    @RequestMapping(value = "/test")
+    public DataMap scan(StragegyParam stragegyParam) {
+        return stockDailyService.test(stragegyParam);
+    }
+
 }

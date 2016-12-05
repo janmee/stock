@@ -171,7 +171,7 @@ public class RedisLock {
                 }
             }
             timeout -= 100;
-            Thread.sleep(100);
+            wait(100);
         }
         return false;
     }

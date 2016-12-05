@@ -53,6 +53,7 @@ public class SinaStockDailyBetweenPageProcessor implements PageProcessor {
         }
     }
 
+
     public Site getSite() {
         return site;
     }
