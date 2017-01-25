@@ -42,6 +42,8 @@ public class StockDailyServiceImpl implements StockDailyService {
     //20W
     private static final long MIN_VOLUME = 200000;
 
+    private static final int PAGE_SIZE = 2000;
+
     @Autowired
     private StockDailyDao stockDailyDao;
 
@@ -266,11 +268,13 @@ public class StockDailyServiceImpl implements StockDailyService {
 //        }
         StragegyParam newParam;
 //        for (now = getLastWeekDay(now, 0); now.compareTo(endDate) >= 0; now = getLastWeekDay(now, -1)) {
-        for (i = 0; i < 1000; i++) {
+        for (i = 0; i < 10000; i++) {
             newParam = new StragegyParam();
             BeanUtils.copyProperties(stragegyParam, newParam);
             stragegyParam.setDate(DateUtils.formatDateStr(now, DateUtils.PATTREN_DATE));
-            runStragegy(stragegyParam);
+            List<StockDaily> stockDailies = runStragegy(stragegyParam);
+            //计算收益
+//            List<StockProfit> stockProfits = calcProfit(stockDailies, stragegyParam.getDate(), stragegyParam.getProfitDays(), profitCount);
 //            stockDailyDao.findByDateNative(now);
             now = getLastWeekDay(now, -1);
 //            List<StockDaily> stockDailies = runStragegy(stragegyParam);
@@ -348,22 +352,28 @@ public class StockDailyServiceImpl implements StockDailyService {
     private List<StockDaily> runStragegy(StragegyParam stragegyParam) {
         List<Integer> stragegyTypes = stragegyParam.getStragegyType();
         Date now = stragegyParam.getDate();
-        //今天数据
-        List<StockDaily> stockDailies = stockDailyDao.findByDateNative(now);
+        int total = stockDailyDao.countByDate(now);
+        List<StockDaily> stockDailies;
+        List<StockDaily> matchDailies = new ArrayList<>();
+        for (int i = 0; i < total; i = i + PAGE_SIZE) {
+            //今天数据
+            stockDailies = stockDailyDao.findByDateNative(now, i, i + PAGE_SIZE);
 //        List<StockDaily> stockDailies = stockDailyDao.findByDate(now);
-        daoCount.incrementAndGet();
-        if (stockDailies.size() != 0) {
-            for (Integer type : stragegyTypes) {
-                if (type == StragegyParam.Type.OneDayVolumeLarge.getType()) {
-                    stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
-                } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
-                    stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
-                } else if (type == StragegyParam.Type.LowlineRate.getType()) {
-                    stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(), stockDailies);
+            daoCount.incrementAndGet();
+            if (stockDailies.size() != 0) {
+                for (Integer type : stragegyTypes) {
+                    if (type == StragegyParam.Type.OneDayVolumeLarge.getType()) {
+                        stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
+                    } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
+                        stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
+                    } else if (type == StragegyParam.Type.LowlineRate.getType()) {
+                        stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(), stockDailies);
+                    }
                 }
+                matchDailies.addAll(stockDailies);
             }
         }
-        return stockDailies;
+        return matchDailies;
     }
 
     /**
@@ -540,12 +550,14 @@ public class StockDailyServiceImpl implements StockDailyService {
         List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolInNative(lastWeekDay, symbols);
 //        List<StockDaily> oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
         daoCount.incrementAndGet();
-        while (oldStockDailies == null || oldStockDailies.size() == 0) {
+        int i = 0;
+        while ((oldStockDailies == null || oldStockDailies.size() == 0) && i < 10) {
             lastWeekDay = getLastWeekDay(lastWeekDay, -1);
             //上一交易日数据
             oldStockDailies = stockDailyDao.findByDateAndStockSymbolInNative(lastWeekDay, symbols);
 //            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
             daoCount.incrementAndGet();
+            i++;
 //            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
         }
         return oldStockDailies;

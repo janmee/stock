@@ -15,12 +15,15 @@ public interface StockDailyDao extends BaseJpaRepository<StockDaily, String>, Jp
 
     public List<StockDaily> findByDateBetweenOrderByDateDesc(Date startDate, Date endDate);
 
-    @Query(value = "select * from stock_daily o where o.date = ?1 and o.stock_symbol in ?2",nativeQuery = true)
+    @Query(value = "select * from stock_daily o where o.date = ?1 and o.stock_symbol in ?2 limit 3000",nativeQuery = true)
     public List<StockDaily> findByDateAndStockSymbolInNative(Date date, List<String> symbols);
 
-    @Query(value = "select * from stock_daily o where o.date between ?1 and ?2 order by o.date desc",nativeQuery = true)
+    @Query(value = "select * from stock_daily o where o.date between ?1 and ?2 order by o.date desc limit 3000",nativeQuery = true)
     public List<StockDaily> findByDateBetweenOrderByDateDescNative(Date startDate, Date endDate);
 
-    @Query(value = "select * from stock_daily o where o.date = ?1",nativeQuery = true)
-    public List<StockDaily> findByDateNative(Date date);
+    @Query(value = "select * from stock_daily o where o.date = ?1 and o.current > 1 limit ?2,?3",nativeQuery = true)
+    public List<StockDaily> findByDateNative(Date date,int start,int end);
+
+    @Query(value = "select count(*) from stock_daily o where o.date = ?1 and o.current < 1",nativeQuery = true)
+    public int countByDate(Date date);
 }
