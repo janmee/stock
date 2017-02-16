@@ -29,6 +29,10 @@ public class StragegyParam {
         }
     }
 
+    public static final int ONE_DAY_VOLUME_LARGE = 1;
+    public static final int DAYS_LOW_PRICE = 2;
+    public static final int LOW_LINE_RATE = 3;
+
     private List<Integer> stragegyType;
 
     private String date;

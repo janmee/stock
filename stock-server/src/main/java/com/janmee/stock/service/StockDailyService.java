@@ -29,6 +29,4 @@ public interface StockDailyService {
 
     DataMap scanAllDate(StragegyParam stragegyParam);
 
-    DataMap test(StragegyParam stragegyParam);
-
 }
