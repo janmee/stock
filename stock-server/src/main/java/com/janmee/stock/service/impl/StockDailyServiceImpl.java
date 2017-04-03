@@ -1,12 +1,14 @@
 package com.janmee.stock.service.impl;
 
 import com.janmee.stock.base.StatusCode;
-import com.janmee.stock.base.utils.MapUtils;
 import com.janmee.stock.cache.RedisCacheService;
 import com.janmee.stock.cache.RedisKey;
 import com.janmee.stock.cache.RedisLock;
 import com.janmee.stock.dao.StockDailyDao;
 import com.janmee.stock.entity.StockDaily;
+import com.janmee.stock.factory.BaseStrategy;
+import com.janmee.stock.factory.StrategyFactory;
+import com.janmee.stock.service.MailService;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.utils.DateUtils;
 import com.janmee.stock.utils.EntityMapUtils;
@@ -29,15 +31,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.*;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class StockDailyServiceImpl implements StockDailyService {
 
     private static final Logger logger = LoggerFactory.getLogger(StockDailyServiceImpl.class);
+
+    private static final String STOCK_URL = "http://stock.finance.sina.com.cn/usstock/quotes/%s.html";
 
     //20W
     private static final long MIN_VOLUME = 200000;
@@ -49,6 +51,9 @@ public class StockDailyServiceImpl implements StockDailyService {
 
     @Autowired
     private RedisCacheService redisCacheService;
+
+    @Autowired
+    private MailService mailService;
 
 
     @Override
@@ -223,6 +228,21 @@ public class StockDailyServiceImpl implements StockDailyService {
         return dataMap;
     }
 
+    @Override
+    public void sendEmail(List<String> symbols, String date) {
+        String body = "%s";
+        StringBuilder html = new StringBuilder("");
+        for (String symbol : symbols) {
+            html.append("<a href='").append(genertorStockUrl(symbol)).append("'>").append(symbol).append("</a>");
+        }
+        String text = String.format(body, html.toString());
+        try {
+            mailService.htmlSend("56508820@qq.com", date + "策略查询结果", text);
+        } catch (Exception e) {
+            logger.error("邮件发送失败", e);
+        }
+
+    }
 
     /**
      * 计算收益
@@ -285,123 +305,13 @@ public class StockDailyServiceImpl implements StockDailyService {
 //        List<StockDaily> stockDailies = stockDailyDao.findByDate(now);
             if (stockDailies.size() != 0) {
                 for (Integer type : stragegyTypes) {
-                    if (type == StragegyParam.Type.OneDayVolumeLarge.getType()) {
-                        stockDailies = findByOneDayVolumeLarge(stragegyParam.getDate(), stragegyParam.getTimes(), stragegyParam.getMinVolume(), stockDailies);
-                    } else if (type == StragegyParam.Type.DaysLowPrice.getType()) {
-                        stockDailies = findByDaysLowPrice(stragegyParam.getDate(), stragegyParam.getDays(), stragegyParam.getLowTimes(), stockDailies);
-                    } else if (type == StragegyParam.Type.LowlineRate.getType()) {
-                        stockDailies = findByLongLowLine(stragegyParam.getDate(), stragegyParam.getLowlineRate(), stockDailies);
-                    }
+                    BaseStrategy strategy = StrategyFactory.getInstant(type);
+                    stockDailies = strategy.runStrategy(stragegyParam, stockDailies);
                 }
                 matchDailies.addAll(stockDailies);
             }
         }
         return matchDailies;
-    }
-
-    /**
-     * 策略1
-     * 根据当天成交量放大查找
-     *
-     * @return
-     */
-    private List<StockDaily> findByOneDayVolumeLarge(Date date, Double times, Long minVolume, List<StockDaily> todayStockDailies) {
-        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
-        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
-        Date lastWeekDay = date;
-        //昨天数据
-        List<StockDaily> oldStockDailies = null;
-        int i = 0;
-        while ((oldStockDailies == null || oldStockDailies.size() == 0) && i < 7) {
-            lastWeekDay = getLastWeekDay(lastWeekDay, -1);
-            //上一交易日数据
-            oldStockDailies = stockDailyDao.findByDateAndStockSymbolInNative(lastWeekDay, symbols);
-//            oldStockDailies = stockDailyDao.findByDateAndStockSymbolIn(lastWeekDay, symbols);
-//            oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-            i++;
-        }
-        if (oldStockDailies == null || oldStockDailies.size() == 0) return new ArrayList<>();
-        Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
-        List<StockDaily> rets = new ArrayList<>();
-        for (StockDaily todayStockDaily : todayStockDailies) {
-            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
-                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
-                if (todayStockDaily.getVolume().longValue() > times * oldStockDaily.getVolume().longValue()
-                        && todayStockDaily.getOpen() < oldStockDaily.getCurrent()
-                        && todayStockDaily.getCurrent() > todayStockDaily.getLow()
-                        && todayStockDaily.getVolume().longValue() > minVolume
-                        )
-                    rets.add(todayStockDaily);
-            }
-        }
-        oldMap.clear();
-        oldStockDailies.clear();
-        return rets;
-    }
-
-    /**
-     * 策略2
-     * 根据多天低价查找
-     *
-     * @param todayStockDailies
-     * @return
-     */
-    private List<StockDaily> findByDaysLowPrice(Date date, Integer days, Double lowTimes, List<StockDaily> todayStockDailies) {
-        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
-        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
-        //多天前数据
-        Date lastWeekDay = getLastWeekDay(date, -days);
-//        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        List<StockDaily> oldStockDailies = loopFindByDateAndStockSymbolIn(lastWeekDay, symbols);
-        Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
-        List<StockDaily> rets = new ArrayList<>();
-        for (StockDaily todayStockDaily : todayStockDailies) {
-            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
-                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
-                if (todayStockDaily.getCurrent() != 0
-                        && todayStockDaily.getCurrent() < lowTimes * oldStockDaily.getCurrent() //今天比前N天低lowTimes倍
-                        )
-                    rets.add(todayStockDaily);
-            }
-        }
-        oldMap.clear();
-        oldStockDailies.clear();
-        return rets;
-    }
-
-    /**
-     * 策略3
-     * 当天价格比昨天低，且当天出现长下影线
-     *
-     * @param date              当天日期
-     * @param lowlineRate       下影线，最低价比开盘价低多少，比率
-     * @param todayStockDailies 当天数据
-     * @return
-     */
-    private List<StockDaily> findByLongLowLine(Date date, Double lowlineRate, List<StockDaily> todayStockDailies) {
-        if (todayStockDailies == null || todayStockDailies.size() == 0) return new ArrayList<>();
-        List<String> symbols = CollectionUtils.getPropertyList(todayStockDailies, "stockSymbol");
-        //上一个交易日数据
-        Date lastWeekDay = getLastWeekDay(date, -1);
-//        List<StockDaily> oldStockDailies = findByDateAndStockSymbolInFromCache(lastWeekDay, symbols);
-        List<StockDaily> oldStockDailies = loopFindByDateAndStockSymbolIn(lastWeekDay, symbols);
-        Map<String, StockDaily> oldMap = MapUtils.stockDailyToMap(oldStockDailies);
-        List<StockDaily> rets = new ArrayList<>();
-        double rate = 1 - lowlineRate;
-        for (StockDaily todayStockDaily : todayStockDailies) {
-            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
-                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
-                if (todayStockDaily.getCurrent() != 0
-                        && todayStockDaily.getCurrent() < oldStockDaily.getCurrent() //今天比上一交易日低
-                        && (todayStockDaily.getOpen() * rate >= todayStockDaily.getLow() //下影线
-                        || todayStockDaily.getCurrent() * rate >= todayStockDaily.getLow())
-                        )
-                    rets.add(todayStockDaily);
-            }
-        }
-        oldMap.clear();
-        oldStockDailies.clear();
-        return rets;
     }
 
     private List<StockDaily> findByDateAndStockSymbolInFromCache(Date date, List<String> symbols) {
@@ -505,11 +415,10 @@ public class StockDailyServiceImpl implements StockDailyService {
             default:
                 break;
         }
-        try {
-            return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return new Date();
-        }
+        return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
+    }
+
+    private String genertorStockUrl(String symbol) {
+        return String.format(STOCK_URL, symbol);
     }
 }

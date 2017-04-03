@@ -5,6 +5,7 @@ import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.utils.StockUtils;
 import com.janmee.stock.vo.StragegyParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
  * @author luojianming on 2017/2/13.
  * @version 1.0
  */
+@Component
 public abstract class BaseStrategy {
     @Autowired
     protected StockDailyDao stockDailyDao;

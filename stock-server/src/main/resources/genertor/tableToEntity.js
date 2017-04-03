@@ -36,6 +36,7 @@ var getTableDesc = function (conf, cb) {
     });
     connection.connect(function(error) {
         if(error) {
+            console.log("error");
             cb (error);
         }
 
@@ -81,6 +82,7 @@ var typeToJava = [
 
 
 var genJavaBean = function (fields, defs, cb) {
+    console.log(12);
     String.prototype.capitalizeFirstLetter = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };

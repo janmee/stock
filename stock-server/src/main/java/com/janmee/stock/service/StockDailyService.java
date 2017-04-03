@@ -1,15 +1,13 @@
 package com.janmee.stock.service;
 
 import com.janmee.stock.entity.StockDaily;
-import com.janmee.stock.vo.DaySymbolVo;
-import com.janmee.stock.vo.query.StockDailyQuery;
 import com.janmee.stock.vo.StragegyParam;
+import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.base.DataMap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Map;
 
 public interface StockDailyService {
 
@@ -28,5 +26,7 @@ public interface StockDailyService {
     List<String> findByStragegy(StragegyParam stragegyParam);
 
     DataMap scanAllDate(StragegyParam stragegyParam);
+
+    void sendEmail(List<String> symbols, String date);
 
 }

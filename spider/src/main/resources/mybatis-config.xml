@@ -42,9 +42,9 @@
                  <transactionManager type="JDBC" />
                  <dataSource type="POOLED">
                      <property name="driver" value="com.mysql.jdbc.Driver" />
-                     <property name="url" value="jdbc:mysql://172.18.80.56:3306/seewo_analysis_online?characterEncoding=UTF-8" />
-                     <property name="username" value="seewo" />
-                     <property name="password" value="seewo@cvte" />
+                     <property name="url" value="jdbc:mysql://localhost:3306/stock?characterEncoding=UTF-8" />
+                     <property name="username" value="root" />
+                     <property name="password" value="123456" />
                  </dataSource>
              </environment>
          </environments>

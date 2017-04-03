@@ -5,13 +5,14 @@ import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.utils.StockUtils;
 import com.janmee.stock.vo.StragegyParam;
 import com.seewo.core.util.collection.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-
+@Component
 public class LongLowLineStragegy extends BaseStrategy {
 
     /**

@@ -23,6 +23,14 @@ public class OneDayVolumeLargeStrategy extends BaseStrategy {
     @Autowired
     private StockDailyDao stockDailyDao;
 
+    /**
+     * 策略1
+     * 根据当天成交量放大查找
+     * @param times 成交量放大倍数
+     * @param minVolumn 最低成交量
+     *
+     * @return
+     */
     @Override
     public List<StockDaily> runStrategy(StragegyParam stragegyParam, List<StockDaily> todayStockDailies) {
         Date date = stragegyParam.getDate();

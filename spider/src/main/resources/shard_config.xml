@@ -19,5 +19,5 @@
     <!--
             配置分表策略
     -->
-    <strategy tableName="stock_daily" strategyClass="com.janmee.spider.shard.StockDailyShardStrategyImpl"/>
+    <!--<strategy tableName="stock_daily" strategyClass="com.janmee.spider.shard.StockDailyShardStrategyImpl"/>-->
 </shardingConfig>

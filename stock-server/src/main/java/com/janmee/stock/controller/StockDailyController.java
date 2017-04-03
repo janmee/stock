@@ -1,10 +1,13 @@
 package com.janmee.stock.controller;
 
+import com.janmee.stock.base.DataMapBuilder;
 import com.janmee.stock.base.StatusCode;
 import com.janmee.stock.entity.StockDaily;
+import com.janmee.stock.service.MailService;
 import com.janmee.stock.service.StockDailyService;
-import com.janmee.stock.vo.query.StockDailyQuery;
+import com.janmee.stock.utils.DateUtils;
 import com.janmee.stock.vo.StragegyParam;
+import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.base.Constants;
 import com.seewo.core.base.DataMap;
 import com.seewo.core.util.bean.BeanUtils;
@@ -15,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/v1/stockDailys")
@@ -22,6 +27,9 @@ public class StockDailyController {
 
     @Autowired
     private StockDailyService stockDailyService;
+
+    @Autowired
+    private MailService mailService;
 
     /**
      * 条件查询
@@ -84,8 +92,10 @@ public class StockDailyController {
      */
     @RequestMapping(value = "/strategy")
     public DataMap findByStragegy(StragegyParam stragegyParam, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        List<String> symbols = stockDailyService.findByStragegy(stragegyParam);
+        stockDailyService.sendEmail(symbols, DateUtils.formatDateStr(stragegyParam.getDate(), DateUtils.PATTREN_DATE));
         return new DataMap().addAttribute(Constants.STATUS_CODE, StatusCode.SUCCESS.getStatusCode())
-                .addAttribute(Constants.DATA, stockDailyService.findByStragegy(stragegyParam));
+                .addAttribute(Constants.DATA, symbols);
     }
 
     /**
@@ -96,9 +106,10 @@ public class StockDailyController {
         return stockDailyService.scanAllDate(stragegyParam);
     }
 
-    @RequestMapping(value = "/test")
-    public DataMap scan(StragegyParam stragegyParam) {
-        return stockDailyService.test(stragegyParam);
+    @RequestMapping(value = "/mail")
+    public DataMap mail() throws Exception {
+        mailService.simpleSend("56508820@qq.com", "test", "test");
+        return new DataMapBuilder().success();
     }
 
 }

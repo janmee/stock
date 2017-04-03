@@ -15,16 +15,12 @@ public class RedisCacheInitListener implements ApplicationListener<ContextRefres
 
     private Logger logger = LoggerFactory.getLogger(RedisCacheInitListener.class);
 
-    @Autowired
-    private RedisCacheService redisCacheService;
-
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         logger.info("onApplicationEvent start");
         String pattern = Constants.REDIS_PREFIX + "*";
         logger.info("onApplicationEvent deleteKeyWithPattern by {}", pattern);
         //清空Redis缓存
-        redisCacheService.deleteKeyWithPattern(pattern);
         logger.info("onApplicationEvent end");
     }
 }

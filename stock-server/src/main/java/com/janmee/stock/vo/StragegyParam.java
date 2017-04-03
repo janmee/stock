@@ -35,22 +35,27 @@ public class StragegyParam {
 
     private List<Integer> stragegyType;
 
+    //计算日期
     private String date;
 
+    //成交量放大倍数
     private Double times;
 
+    //最低成交量
     private Long minVolume;
 
     //多天前数据
     private Integer days;
 
-    //低于的倍数
+    //多天前价格与当前价倍数
     private Double lowTimes;
 
     private String endDate;
 
+    //计算收益天数
     private Integer profitDays;
 
+    //最低价与收盘价比例
     private Double lowlineRate;
 
     public List<Integer> getStragegyType() {

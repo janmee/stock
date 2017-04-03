@@ -19,6 +19,14 @@ import java.util.Map;
 @Component
 public class DaysLowPriceStrategy extends BaseStrategy {
 
+    /**
+     * 策略2
+     * 根据多天低价查找
+     *
+     * @param lowTimes 多天前价格与当前价倍数
+     * @param todayStockDailies
+     * @return
+     */
     @Override
     public List<StockDaily> runStrategy(StragegyParam stragegyParam, List<StockDaily> todayStockDailies) {
         Date date = stragegyParam.getDate();

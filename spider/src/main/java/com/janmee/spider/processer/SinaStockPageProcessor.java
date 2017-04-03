@@ -3,6 +3,7 @@ package com.janmee.spider.processer;
 import com.alibaba.fastjson.JSONArray;
 import com.janmee.spider.entity.Stock;
 import com.janmee.spider.service.StockService;
+import com.seewo.core.util.collection.CollectionUtils;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -32,7 +33,8 @@ public class SinaStockPageProcessor implements PageProcessor {
             String jsonStr = matcher.group(1);
             System.out.println("json:" + jsonStr);
             List<Stock> stocks = JSONArray.parseArray(jsonStr, Stock.class);
-            stockService.insertBatch(stocks);
+            if (CollectionUtils.isNotEmpty(stocks))
+                stockService.insertBatch(stocks);
         }
     }
 

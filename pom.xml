@@ -26,7 +26,7 @@
         <hibernate.version>4.3.7.Final</hibernate.version>
         <hibernate-validator.version>5.0.3.Final</hibernate-validator.version>
         <slf4j.version>1.7.6</slf4j.version>
-        <fastjson.version>1.2.3</fastjson.version>
+        <fastjson.version>1.2.28</fastjson.version>
         <druid.version>1.0.13</druid.version>
         <!--jedis-->
         <jedis.version>2.6.2</jedis.version>
@@ -322,6 +322,14 @@
                 <artifactId>webmagic-extension</artifactId>
                 <version>0.5.3</version>
             </dependency>
+
+            <!-- https://mvnrepository.com/artifact/javax.mail/mail -->
+            <dependency>
+                <groupId>javax.mail</groupId>
+                <artifactId>mail</artifactId>
+                <version>1.4</version>
+            </dependency>
+
 
 
         </dependencies>

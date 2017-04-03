@@ -273,11 +273,15 @@ public class DateUtils extends org.apache.commons.lang.time.DateUtils {
         return df.parse(dateStr);
     }
 
-    public static synchronized Date formatDate(Date src, String pattern) throws ParseException {
+    public static synchronized Date formatDate(Date src, String pattern)  {
         SimpleDateFormat df = new SimpleDateFormat(pattern);
         String dateStr = df.format(src);
         Date date = null;
-        date = df.parse(dateStr);
+        try {
+            date = df.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         return date;
     }
 

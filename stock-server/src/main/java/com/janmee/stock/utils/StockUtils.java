@@ -1,6 +1,5 @@
 package com.janmee.stock.utils;
 
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -29,11 +28,6 @@ public class StockUtils {
             default:
                 break;
         }
-        try {
-            return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return new Date();
-        }
+        return DateUtils.formatDate(lastWeekDay, DateUtils.PATTREN_DATE);
     }
 }
