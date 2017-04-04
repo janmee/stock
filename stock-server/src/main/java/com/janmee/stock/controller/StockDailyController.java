@@ -6,6 +6,7 @@ import com.janmee.stock.entity.StockDaily;
 import com.janmee.stock.service.MailService;
 import com.janmee.stock.service.StockDailyService;
 import com.janmee.stock.utils.DateUtils;
+import com.janmee.stock.vo.DaySymbolVo;
 import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.base.Constants;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -108,7 +110,8 @@ public class StockDailyController {
 
     @RequestMapping(value = "/mail")
     public DataMap mail() throws Exception {
-        mailService.simpleSend("56508820@qq.com", "test", "test");
+        mailService.simpleSend("56508820@qq.com","1","1");
+        stockDailyService.sendEmail(new ArrayList<DaySymbolVo>(),0,0,0);
         return new DataMapBuilder().success();
     }
 

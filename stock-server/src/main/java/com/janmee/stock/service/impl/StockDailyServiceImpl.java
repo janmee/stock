@@ -168,7 +168,7 @@ public class StockDailyServiceImpl implements StockDailyService {
         Date now = stragegyParam.getDate();
         Date endDate = DateUtils.convertToDate(stragegyParam.getEndDate());
         // 创建一个线程池
-        ExecutorService pool = Executors.newFixedThreadPool(10);
+        ExecutorService pool = Executors.newFixedThreadPool(5);
         // 创建多个有返回值的任务
         List<Future> list = new ArrayList<Future>();
         ProfitCount profitCount = new ProfitCount();
@@ -225,7 +225,27 @@ public class StockDailyServiceImpl implements StockDailyService {
         dataMap.addAttribute("avgProfit", ((double) profitCount.getTotalProfit().get()) / profitCount.getGainCount().intValue() / 1000);
         dataMap.addAttribute("avgLoss", ((double) profitCount.getTotalLoss().get()) / profitCount.getLossCount().intValue() / 1000);
         dataMap.addAttribute("totalAvg", ((double) profitCount.getTotalProfit().get() + (double) profitCount.getTotalLoss().get()) / (profitCount.getGainCount().intValue() + profitCount.getLossCount().intValue()) / 1000);
+        sendEmail(retList, total, profitCount.getGainCount().intValue(), profitCount.getLossCount().intValue());
         return dataMap;
+    }
+
+    public void sendEmail(List<DaySymbolVo> daySymbolVos, int total, int profitCount, int lossCount) {
+        StringBuilder text = new StringBuilder();
+        text.append("总数：").append(total).append("\n");
+        text.append("正收益数：").append(profitCount).append("\n");
+        text.append("负收益数：").append(lossCount).append("\n");
+        for (DaySymbolVo daySymbolVo : daySymbolVos) {
+            text.append(daySymbolVo.getDate()).append(":\n");
+            for (StockProfit stockProfit : daySymbolVo.getStockProfits()) {
+                text.append(stockProfit.getSymbol()).append("(").append(stockProfit.getProfit()).append(")(").append(genertorStockUrl(stockProfit.getSymbol())).append(")、");
+            }
+            text.append("\n");
+        }
+        try {
+            mailService.simpleSend("56508820@qq.com", "策略扫描结果", text.toString());
+        } catch (Exception e) {
+            logger.error("邮件发送失败", e);
+        }
     }
 
     @Override
@@ -233,7 +253,7 @@ public class StockDailyServiceImpl implements StockDailyService {
         String body = "%s";
         StringBuilder html = new StringBuilder("");
         for (String symbol : symbols) {
-            html.append("<a href='").append(genertorStockUrl(symbol)).append("'>").append(symbol).append("</a>");
+            html.append("<a href='").append(genertorStockUrl(symbol)).append("'>").append(symbol).append("</a>\n");
         }
         String text = String.format(body, html.toString());
         try {

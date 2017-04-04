@@ -38,15 +38,15 @@ public class LongLowLineStragegy extends BaseStrategy {
         List<StockDaily> rets = new ArrayList<>();
         double rate = 1 - lowlineRate;
         for (StockDaily todayStockDaily : todayStockDailies) {
-            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
-                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
+//            if (oldMap.containsKey(todayStockDaily.getStockSymbol())) {
+//                StockDaily oldStockDaily = oldMap.get(todayStockDaily.getStockSymbol());
                 if (todayStockDaily.getCurrent() != 0
-                        && todayStockDaily.getCurrent() < oldStockDaily.getCurrent() //今天比上一交易日低
+                        //&& todayStockDaily.getCurrent() < oldStockDaily.getCurrent() //今天比上一交易日低
                         && (todayStockDaily.getOpen() * rate >= todayStockDaily.getLow() //下影线
                         || todayStockDaily.getCurrent() * rate >= todayStockDaily.getLow())
                         )
                     rets.add(todayStockDaily);
-            }
+//            }
         }
         oldMap.clear();
         oldStockDailies.clear();

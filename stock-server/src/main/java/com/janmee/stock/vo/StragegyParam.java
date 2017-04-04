@@ -3,6 +3,7 @@ package com.janmee.stock.vo;
 
 import com.janmee.stock.utils.DateUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -47,8 +48,7 @@ public class StragegyParam {
     //多天前数据
     private Integer days;
 
-    //多天前价格与当前价倍数
-    private Double lowTimes;
+    private static StragegyParam defalutParam;
 
     private String endDate;
 
@@ -57,6 +57,26 @@ public class StragegyParam {
 
     //最低价与收盘价比例
     private Double lowlineRate;
+    //当前价与多天前价格比率
+    private Double lowTimes;
+
+    public static StragegyParam defaultParam() {
+        if (defalutParam == null) {
+            defalutParam = new StragegyParam();
+            defalutParam.setDate(DateUtils.formatDateStr(new Date(), DateUtils.PATTREN_DATE));
+            defalutParam.setDays(20);
+            defalutParam.setLowlineRate(0.5);
+            defalutParam.setLowTimes(0.8);
+            defalutParam.setMinVolume(500000L);
+            defalutParam.setTimes(1.1);
+            List<Integer> types = new ArrayList<>(3);
+            types.add(1);
+            types.add(2);
+            types.add(3);
+            defalutParam.setStragegyType(types);
+        }
+        return defalutParam;
+    }
 
     public List<Integer> getStragegyType() {
         return stragegyType;

@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@Transactional
 public class StockServiceImpl implements StockService {
 
 	private static final Logger logger = LoggerFactory.getLogger(StockServiceImpl.class);

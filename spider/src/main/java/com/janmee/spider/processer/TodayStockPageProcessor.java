@@ -68,6 +68,20 @@ public class TodayStockPageProcessor implements PageProcessor {
         return site;
     }
 
+    public static void run() {
+        List<Stock> stocks = stockService.selectAll();
+        allSymbols = new HashMap<String, Stock>();
+        for (Stock stock : stocks) {
+            allSymbols.put(stock.getSymbol(), stock);
+        }
+        //设置要爬去的页面
+        String[] request = new String[TOTAL_PAGE];
+        for (int i = 0; i < TOTAL_PAGE; i++) {
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp.php//US_CategoryService.getList?page=" + (i + 1) + "&num=60";
+        }
+        Spider.create(new TodayStockPageProcessor()).addUrl(request).thread(5).run();
+    }
+
     public static void main(String[] args) {
         List<Stock> stocks = stockService.selectAll();
         allSymbols = new HashMap<String, Stock>();

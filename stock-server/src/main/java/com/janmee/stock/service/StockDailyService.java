@@ -1,6 +1,7 @@
 package com.janmee.stock.service;
 
 import com.janmee.stock.entity.StockDaily;
+import com.janmee.stock.vo.DaySymbolVo;
 import com.janmee.stock.vo.StragegyParam;
 import com.janmee.stock.vo.query.StockDailyQuery;
 import com.seewo.core.base.DataMap;
@@ -28,5 +29,7 @@ public interface StockDailyService {
     DataMap scanAllDate(StragegyParam stragegyParam);
 
     void sendEmail(List<String> symbols, String date);
+
+    void sendEmail(List<DaySymbolVo> daySymbolVos, int total, int profitCount, int lossCount);
 
 }
