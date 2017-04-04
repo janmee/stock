@@ -68,5 +68,15 @@ public class SinaStockDailyBetweenPageProcessor implements PageProcessor {
         Spider.create(new SinaStockDailyBetweenPageProcessor()).addUrl(request).thread(6).run();
     }
 
+    public void run() {
+        List<Stock> stocks = stockService.selectAll();
+        //设置要爬去的页面
+        String[] request = new String[stocks.size()];
+        for (int i = 0; i < stocks.size(); i++) {
+            request[i] = "http://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/var%20data=/US_MinKService.getDailyK?symbol=" + stocks.get(i).getSymbol();
+        }
+        Spider.create(new SinaStockDailyBetweenPageProcessor()).addUrl(request).thread(6).run();
+    }
+
 
 }

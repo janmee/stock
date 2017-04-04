@@ -16,6 +16,11 @@
     <packaging>war</packaging>
 
     <dependencies>
+        <dependency>
+            <groupId>com.janmee</groupId>
+            <artifactId>spider</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- web-core -->
         <dependency>

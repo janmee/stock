@@ -50,15 +50,6 @@
                 <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
-
-        <repository>
-            <id>shardbaits</id>
-            <name>shardbaits repository</name>
-            <url>http://shardbatis.googlecode.com/svn/trunk/repository</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -105,13 +96,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-pool2</artifactId>
                 <version>2.3</version>
-            </dependency>
-
-            <!--module-monitor-sdk-->
-            <dependency>
-                <groupId>com.cvte.myou</groupId>
-                <artifactId>module-monitor-sdk</artifactId>
-                <version>${module-monitor-sdk.version}</version>
             </dependency>
 
             <dependency>
@@ -192,12 +176,6 @@
                 <artifactId>mybatis</artifactId>
                 <version>${mybatis.version}</version>
             </dependency>
-            <!-- mybatis/spring包 -->
-            <dependency>
-                <groupId>org.mybatis</groupId>
-                <artifactId>mybatis-spring</artifactId>
-                <version>1.2.2</version>
-            </dependency>
 
             <dependency>
                 <groupId>javax.servlet</groupId>
@@ -276,13 +254,6 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.3.6</version>
-            </dependency>
-
-            <!-- quartz-->
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz</artifactId>
-                <version>2.2.1</version>
             </dependency>
 
             <!-- redis -->
